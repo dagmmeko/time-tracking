@@ -14,12 +14,15 @@ async function sendMail(email) {
     })
 
     let info = transport.sendMail({
-        from: "",
-        to: "bar@example.com", // list of receivers
+        from: process.env.SMTP_EMAIL,
+        to: "dagixmeko@gmail.com", // list of receivers
         subject: "Hello ✔", // Subject line
         text: "Hello world?", // plain text body
         html: "<b>Hello world?</b>", // html bod
     })
+
+    console.log("Message sent: %s", info);
+
 }
 
 export default sendMail
