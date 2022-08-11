@@ -9,10 +9,11 @@ const url = 'mongodb://localhost:27017';
 
 const client = new MongoClient(url, { useUnifiedTopology: true } );
 const server = new ApolloServer({typeDefs: [GlobalType ,AuthType], resolvers: [GlobalResolver ,AuthResolver] })
+const db = client.db("time-tracker")
 
 await client.connect().then(()=> {
     console.log('Connected successfully to server');
     return server.listen({port: 8000})
 });
 
-export default client
+export default db

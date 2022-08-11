@@ -1,3 +1,2 @@
-import test from"./test.js"
-
-test()
+import db from"./db.js"
+db
