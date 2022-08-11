@@ -1,36 +1,89 @@
 import db from "../../db.js"
-import { ObjectId } from "mongodb";
+import mongo, { ObjectId } from "mongodb";
+import bcrypt from "bcryptjs"
+import jwt from "jsonwebtoken"
+import {GraphQLUpload} from "graphql-upload"
+import Grid from "gridfs-stream"
 
 
 export const AuthResolver = {
+    Upload: GraphQLUpload,
+    
     Query: {
+
        getAccount: async(_, args) => {
-        const collection = db.collection('accounts');
-        console.log(args.id)
+            const collection = db.collection('accounts');
            const user = await collection.findOne({_id: new ObjectId(args.id) })
-           console.log("USER: ",user)
-        //    62f39a513b35c58700222d84
-           return user
+           console.log(user)
+           if (args.access_token !== null && user.access_token === args.access_token)
+            return user
+           else 
+            return  
        }
    },
    Mutation: {
     createAccount: async(_, args) => {
         console.log(args)
+
         const collection = db.collection('accounts');
         const user = await collection.findOne({
-            email: args.email
+            email: args.accountInput.email
         })
-        // console.log(user)
         if (user){
-            return {access_token: "",
-            payload: "Account exists"}
+            return {
+                access_token: "",
+                status: false
+            }
         }
+
+        // var gfs = Grid(db, mongo)
+
+        // var writestream = gfs.createWriteStream({
+        //     filename: args.accountInput.name
+        // });
+        // fs.createReadStream(args.image).pipe(writestream);
+
+
+        const token = jwt.sign({sub:  args.accountInput.name},  args.accountInput.email)
+        args.accountInput.password = bcrypt.hashSync(args.accountInput.password, 10)
+        args.accountInput.access_token = token
+
         const accData = await collection.insertOne(args.accountInput)
-        // console.log(accData)
+        
         return {
-            access_token: "String",
-            payload: "Created"
+            access_token: token,
+            status: true
+        }
+    },
+
+    login: async(_, args) =>{
+        const collection = db.collection('accounts')
+        const user = await collection.findOne({email: args.email})
+        console.log(user)
+        if (user && bcrypt.compareSync(args.password, user.password)){
+            const token = jwt.sign({sub: user.name}, args.email)
+
+            await collection.updateOne({_id: user._id}, {$set: { access_token: token } })
+
+            return {
+                access_token: token,
+                status: true
+            }
+        }
+        return {
+            access_token: "",
+            status: false
+        }
+    },
+    logout: async(_, args)=>{
+        const collection = db.collection('accounts');
+        const user = await collection.findOne({_id: new ObjectId(args.id) })
+        
+        const val = await collection.updateOne({_id: user._id}, {$set: { access_token: null } })
+        if (val){
+            return true
         }
     }
+    
    }
 }
