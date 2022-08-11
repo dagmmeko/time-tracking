@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import {GraphQLUpload} from "graphql-upload"
 import Grid from "gridfs-stream"
+import sendMail from "../../utils/sendmail.js";
 
 
 export const AuthResolver = {
@@ -83,6 +84,17 @@ export const AuthResolver = {
         if (val){
             return true
         }
+    },
+    resetPassword: async(_, args)=>{
+
+        const collection = db.collection('accounts')
+        const user = await collection.findOne({email: args.email})
+
+        if (user){
+            await sendMail(args.email)
+        }
+
+        return false
     }
     
    }
