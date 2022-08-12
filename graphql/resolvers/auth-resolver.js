@@ -185,8 +185,37 @@ export const AuthResolver = {
         return loginChallenge
     },
     loginBiometric: async (_, args) => {
-        const {challenge, key} = parseLoginRequest(args)
-        
+        const {challenge, keyId} = parseLoginRequest(args)
+
+        if (!challenge) {
+            return {
+                access_token: "String",
+                status: false
+            }
+        }
+        const request_register = db.collection('request_register')
+        const challengeData = request_register.findOne({challenge: challenge})
+
+        if (!challengeData, !challengeData.key, challengeData.key.credID !== keyId){
+            return {
+                access_token: "String",
+                status: false
+            }
+        }
+
+        const loggedIn = verifyAuthenticatorAssertion(args, challengeData.key)
+
+        const token = jwt.sign({sub: challengeData.id}, challengeData.email)
+        const accounts = db.collection('accounts')
+
+        await accounts.updateOne({email: challengeData.email}, {$set: {
+            access_token: token
+        }})
+
+        return {
+            access_token: token,
+            status: true
+        }
     }
    }
 }
