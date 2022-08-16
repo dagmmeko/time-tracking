@@ -26,6 +26,7 @@
     "nodemailer": "^6.7.7",
     "nodemon": "^2.0.19",
     "prettier": "^2.7.1",
+    "stripe": "^10.2.0",
     "uuid": "^8.3.2"
   },
   "type": "module"

@@ -5,12 +5,6 @@ export const AuthType = gql`
     scalar Upload
     scalar JSON
 
-    enum AccountType {
-        WORKER
-        MANAGER
-        COMPANY_REPRESENTATIVE
-    }
-
     extend type Query {
         getAccount(id: String!, access_token: String!): Account     
     }
@@ -24,6 +18,9 @@ export const AuthType = gql`
         requestLoginChallenge(email: String!): JSON
         loginBiometric(loginBiometricInput: JSON!): AccessToken!
         logout(id: String!): Boolean!
+        updateAccount(id: ID!, access_token: String, ): Boolean!
+        choosePaymentPlan(account_id: String!, access_token: String!, payment_plan: PlanType!): Boolean
+        createStripeCheckout(account_id: String!, access_token: String!, success_url: String!, cancel_url: String!): String! 
     }
     
     type AccessToken {
@@ -36,6 +33,8 @@ export const AuthType = gql`
 
         email: String!
         password: String!
+        account_type: AccountType
+
       
     }
     
@@ -49,17 +48,23 @@ export const AuthType = gql`
         email: String!
         account_type: AccountType
         password: String!
-        payment_plan: PlansInput
+        payment_plan: PlanType
         payment_status: Boolean!
         reset_token: String
         reset_token_time: String
         access_token: String
-        # image: 
     }
 
-    type PlansInput {
-        type: String!
-        description: [String!]
+    enum PlanType {
+        STARTER
+        ENTERPRISE
+        BUSINESS
+    }
+     
+    enum AccountType {
+        WORKER
+        MANAGER
+        COMPANY_REPRESENTATIVE
     }
     
     ` 

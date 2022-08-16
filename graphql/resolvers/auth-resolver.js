@@ -1,4 +1,4 @@
-import db from "../../db.js"
+import db from "../../index.js"
 import mongo, { ObjectId } from "mongodb";
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
@@ -11,7 +11,8 @@ import {generateRegistrationChallenge,
     generateLoginChallenge,
     parseLoginRequest,
     verifyAuthenticatorAssertion} from "@webauthn/server"
-    import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4 } from 'uuid';
+import Stripe from "stripe";
 
 export const AuthResolver = {
     Upload: GraphQLUpload,
@@ -30,6 +31,15 @@ export const AuthResolver = {
     createAccount: async(_, args) => {
 
         const collection = db.collection('accounts');
+
+        var mailFormat = /\S+@\S+\.\S+/
+
+        if (!mailFormat.test(args.accountInput.email)){
+            return {
+                access_token: "",
+                status: false
+            }
+        }
         const user = await collection.findOne({
             email: args.accountInput.email
         })
@@ -50,7 +60,7 @@ export const AuthResolver = {
             name: args.accountInput.name,
     
             email: args.accountInput.email,
-            account_type: null,
+            account_type: args.accountInput.account_type,
             password: bcrypt.hashSync(args.accountInput.password, 10),
             payment_plan: null,
             payment_status: false,
@@ -216,6 +226,47 @@ export const AuthResolver = {
             access_token: token,
             status: true
         }
+    },
+    choosePaymentPlan: async(_, args) =>{
+        const accounts = db.collection('accounts')
+        const user = await accounts.findOne({_id: new ObjectId(args.account_id)})
+
+        
+
+        if (user && user.access_token === args.access_token){
+            await accounts.updateOne({_id: user._id}, {$set: {payment_plan: args.payment_plan}})
+            return true
+        }
+        return false
+    },
+    createStripeCheckout: async(_, args)=>{
+        const stripe = new Stripe(process.env.STRIPE_SK)
+        const accounts= db.collection('accounts')
+        const payment_plan = db.collection('payment_plans')
+        
+        const user = await accounts.findOne({_id: new ObjectId(args.account_id)})
+
+        
+        if (user && user.access_token === args.access_token && user.account_type === "COMPANY_REPRESENTATIVE"){
+            const payment_price = await payment_plan.findOne({type: user.payment_plan})
+            const session = await stripe.checkout.sessions.create({
+                line_items: [{
+                    price: payment_price.price_id,
+                    quantity: 1
+                }],
+                mode: "subscription",
+                success_url: args.success_url,
+                cancel_url: args.cancel_url,
+                metadata: {
+                    account_id: args.account_id
+                }
+            })
+
+            // console.log(session.url)
+
+            return session.url
+        }
+        return ""
     }
    }
 }
