@@ -7,7 +7,6 @@ import dotenv from "dotenv"
 dotenv.config()
 
 const endpointSecret = "whsec_is6ZaoEp3a8iSfC4hyLxCAMcfhiP3hoc"
-const stripe = new Stripe(process.env.STRIPE_SK)
 
 const server = http.createServer(async (req, res) => {
     const body = await new Promise((resolve)=>{
@@ -38,14 +37,79 @@ const server = http.createServer(async (req, res) => {
     // Handle the event
     switch (event.type) {
         case 'checkout.session.completed':
-            const session = event.data.object
-            
-            if (session && session.metadata && session.metadata.account_id){
-                console.log({i: session.metadata.account_id})
-                const accounts = db.collection('accounts')
-                await accounts.findOneAndUpdate({_id: new ObjectId(session.metadata.account_id)}, {$set: {payment_status: true}})
+            const sessionCompleted = event.data.object
+            const accountsCompleted = db.collection('accounts')
+
+            if (sessionCompleted && sessionCompleted.metadata && sessionCompleted.metadata.account_id){
+                await accountsCompleted.findOneAndUpdate({_id: new ObjectId(sessionCompleted.metadata.account_id)}, 
+                {$set: {payment_status: true, stripe_subscription_id: sessionCompleted.subscription}})     
             }
 
+            break;
+        case 'checkout.session.async_payment_succeeded':
+            const sessionAsync = event.data.object
+            const accountsAsync = db.collection('accounts')
+            
+            if (sessionAsync && sessionAsync.metadata && sessionAsync.metadata.account_id){
+                await accountsAsync.findOneAndUpdate({_id: new ObjectId(sessionAsync.metadata.account_id)},
+                 {$set: {payment_status: true, stripe_subscription_id: sessionAsync.subscription}})
+            }
+            break;
+        case 'invoice.paid':
+            const sessionInvoicePaid = event.data.object
+            const accountsInvoicePaid = db.collection('accounts')
+
+            if (sessionInvoicePaid && sessionInvoicePaid.subscription){   
+                await accountsInvoicePaid.findOneAndUpdate({stripe_subscription_id: sessionInvoicePaid.subscription},
+                 {$set: {payment_status: false}})
+            }
+            
+            const userInvoice = await accountsInvoicePaid.findOne({stripe_subscription_id: sessionInvoicePaid.subscription})
+            if (userInvoice){
+                const invoicePaid = db.collection('invoices')
+                const invoicePaidData = {
+                    account_id: userInvoice._id,
+                    invoice_date: new Date(),
+                    payment_plan: userInvoice.payment_plan,
+                    amount: sessionInvoicePaid.amount_paid,
+                    payment_method: "STRIPE",
+                    payment_status: false
+                }
+                await invoicePaid.insertOne(invoicePaidData)
+            }
+
+            break;
+        case 'invoice.payment_failed':
+            const sessionPaymentFailed = event.data.object
+            const accountsPaymentFailed = db.collection('accounts')
+            
+            if (sessionPaymentFailed && sessionPaymentFailed.subscription){
+                await accountsPaymentFailed.findOneAndUpdate({stripe_subscription_id: sessionPaymentFailed.subscription},
+                 {$set: {payment_status: false}})
+            }
+
+            const userInvoiceFailed = await accountsPaymentFailed.findOne({stripe_subscription_id: sessionPaymentFailed.subscription})
+            if (userInvoiceFailed){
+                const invoiceFailed = db.collection('invoices')
+                const invoiceFailedData = {
+                    account_id: userInvoiceFailed._id,
+                    invoice_date: new Date(),
+                    payment_plan: userInvoiceFailed.payment_plan,
+                    amount: null,
+                    payment_method: "STRIPE",
+                    payment_status: false
+                }
+                await invoiceFailed.insertOne(invoiceFailedData)
+            }
+            
+            break;
+        case 'customer.subscription.deleted':
+            const sessionDeleted = event.data.object
+            const accountsDeleted = db.collection('accounts')
+            if (sessionDeleted && sessionDeleted.id){
+                await accountsDeleted.findOneAndUpdate({stripe_subscription_id: sessionDeleted.id},
+                    {$set: {payment_status: false}})
+            }
             break;
     }
 

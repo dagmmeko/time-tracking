@@ -10,7 +10,7 @@ export const AuthType = gql`
     }
 
     extend type Mutation {
-        createAccount(accountInput: AccountInput!): AccessToken!
+        createAccount(accountInput: AccountInput!, image: Upload): AccessToken!
         requestRegister(email: String!): JSON!
         registerBiometric(registerBiometricInput: JSON!): AccessToken!
         resetPassword(email: String!): Boolean!
@@ -53,6 +53,7 @@ export const AuthType = gql`
         reset_token: String
         reset_token_time: String
         access_token: String
+        stripe_subscription_id: String
     }
 
     enum PlanType {

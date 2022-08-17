@@ -1,10 +1,9 @@
 import db from "../../index.js"
-import mongo, { ObjectId } from "mongodb";
+import mongodb, { ObjectId } from "mongodb";
 import bcrypt from "bcryptjs"
 import jwt from "jsonwebtoken"
 import {GraphQLUpload} from "graphql-upload"
 import GraphQLJSON from 'graphql-type-json';
-import Grid from "gridfs-stream"
 import sendMail from "../../utils/sendmail.js";
 import {generateRegistrationChallenge,
     parseRegisterRequest,
@@ -21,7 +20,7 @@ export const AuthResolver = {
        getAccount: async(_, args) => {
             const collection = db.collection('accounts');
            const user = await collection.findOne({_id: new ObjectId(args.id) })
-           if (args.access_token !== null && user.access_token === args.access_token)
+           if (user && args.access_token !== null && user.access_token === args.access_token)
             return user
            else 
             return  
@@ -29,7 +28,7 @@ export const AuthResolver = {
    },
    Mutation: {
     createAccount: async(_, args) => {
-
+        
         const collection = db.collection('accounts');
 
         var mailFormat = /\S+@\S+\.\S+/
@@ -66,9 +65,19 @@ export const AuthResolver = {
             payment_status: false,
             reset_token: null,
             reset_token_time: null,
-            access_token: token}
+            access_token: token,
+            stripe_subscription_id: null
+        }
 
-        await collection.insertOne(accountInput)
+        const insertedUser = await collection.insertOne(accountInput)
+
+        const bucket = new mongodb.GridFSBucket(db, { bucketName: 'accountImage' });
+
+        const {createReadStream } = await args.image
+
+        createReadStream().pipe(bucket.openUploadStream(insertedUser._id.toString(), {
+         metadata: { account_id: insertedUser._id.toString() }
+        }))
         
         return {
             access_token: token,
@@ -231,9 +240,7 @@ export const AuthResolver = {
         const accounts = db.collection('accounts')
         const user = await accounts.findOne({_id: new ObjectId(args.account_id)})
 
-        
-
-        if (user && user.access_token === args.access_token){
+        if (user && user.access_token === args.access_token && user.account_type === "COMPANY_REPRESENTATIVE"){
             await accounts.updateOne({_id: user._id}, {$set: {payment_plan: args.payment_plan}})
             return true
         }
@@ -266,7 +273,7 @@ export const AuthResolver = {
 
             return session.url
         }
-        return ""
+        return "Failed to create Checkout session"
     }
    }
 }
