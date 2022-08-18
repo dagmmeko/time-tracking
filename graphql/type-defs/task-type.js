@@ -4,6 +4,7 @@ export const TaskType = gql`
     extend type Query {
         getTaskListByManager(accountId: String!, accessToken: String!, status: TaskStatus!): [Task]
         getTaskListByWorkerId(accountId: String!, accessToken: String!, status: TaskStatus!): [Task]
+        getTaskDetailById(taskId: String!, accessToken: String!, accountId: String!): Task
     }
 
     extend type Mutation {
