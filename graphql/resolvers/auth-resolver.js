@@ -35,7 +35,7 @@ export const AuthResolver = {
 
         if (!mailFormat.test(args.accountInput.email)){
             return {
-                access_token: "",
+                access_token: "Wrong email format",
                 status: false
             }
         }
@@ -44,7 +44,7 @@ export const AuthResolver = {
         })
         if (user){
             return {
-                access_token: "",
+                access_token: "user exists",
                 status: false
             }
         }
@@ -71,13 +71,13 @@ export const AuthResolver = {
 
         const insertedUser = await collection.insertOne(accountInput)
 
-        const bucket = new mongodb.GridFSBucket(db, { bucketName: 'accountImage' });
+        // const bucket = new mongodb.GridFSBucket(db, { bucketName: 'accountImage' });
 
-        const {createReadStream } = await args.image
+        // const {createReadStream } = await args.image
 
-        createReadStream().pipe(bucket.openUploadStream(insertedUser._id.toString(), {
-         metadata: { account_id: insertedUser._id.toString() }
-        }))
+        // createReadStream().pipe(bucket.openUploadStream(insertedUser._id.toString(), {
+        //  metadata: { account_id: insertedUser._id.toString() }
+        // }))
         
         return {
             access_token: token,
