@@ -58,10 +58,10 @@ const server = http.createServer(async (req, res) => {
         case 'invoice.paid':
             const sessionInvoicePaid = event.data.object
             const accountsInvoicePaid = db.collection('accounts')
-
+            console.log({session: sessionInvoicePaid})
             if (sessionInvoicePaid && sessionInvoicePaid.subscription){   
                 await accountsInvoicePaid.findOneAndUpdate({stripe_subscription_id: sessionInvoicePaid.subscription},
-                 {$set: {payment_status: false}})
+                 {$set: {payment_status: true}})
             }
             
             const userInvoice = await accountsInvoicePaid.findOne({stripe_subscription_id: sessionInvoicePaid.subscription})
@@ -73,7 +73,8 @@ const server = http.createServer(async (req, res) => {
                     payment_plan: userInvoice.payment_plan,
                     amount: sessionInvoicePaid.amount_paid,
                     payment_method: "STRIPE",
-                    payment_status: false
+                    payment_status: true,
+                    invoice_documents: sessionInvoicePaid.invoice_pdf
                 }
                 await invoicePaid.insertOne(invoicePaidData)
             }
@@ -82,6 +83,8 @@ const server = http.createServer(async (req, res) => {
         case 'invoice.payment_failed':
             const sessionPaymentFailed = event.data.object
             const accountsPaymentFailed = db.collection('accounts')
+
+            console.log({session: sessionPaymentFailed})
             
             if (sessionPaymentFailed && sessionPaymentFailed.subscription){
                 await accountsPaymentFailed.findOneAndUpdate({stripe_subscription_id: sessionPaymentFailed.subscription},
@@ -97,7 +100,8 @@ const server = http.createServer(async (req, res) => {
                     payment_plan: userInvoiceFailed.payment_plan,
                     amount: null,
                     payment_method: "STRIPE",
-                    payment_status: false
+                    payment_status: false,
+                    invoice_documents: sessionPaymentFailed.invoice_pdf
                 }
                 await invoiceFailed.insertOne(invoiceFailedData)
             }

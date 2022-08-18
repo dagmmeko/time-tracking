@@ -11,7 +11,6 @@ export const InvoiceResolver = {
                 console.log("user found")
                 const invoice = db.collection('invoices');
                 const invoiceData = await invoice.find({account_id: new ObjectId(args.accountId)}).toArray();
-                console.log(invoiceData)
                 return invoiceData;
             }
             return null;

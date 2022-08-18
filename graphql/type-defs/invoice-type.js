@@ -11,7 +11,7 @@ export const InvoiceType = gql`
         amount: Float!
         payment_method: String!
         payment_status: Boolean!
-
+        invoice_documents: String
     }
     enum PlanType {
         STARTER
