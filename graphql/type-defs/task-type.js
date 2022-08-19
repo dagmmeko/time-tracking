@@ -5,15 +5,16 @@ export const TaskType = gql`
         getTaskListByManager(accountId: String!, accessToken: String!, status: TaskStatus!): [Task]
         getTaskListByWorkerId(accountId: String!, accessToken: String!, status: TaskStatus!): [Task]
         getTaskDetailById(taskId: String!, accessToken: String!, accountId: String!): Task
+        getCommentByTaskId(taskId: String!, accessToken: String!, accountId: String!): [Comment]
     }
 
     extend type Mutation {
         createTaskByManagerId(taskInput: createTaskInput!, accountId: String!, accessToken: String!): String!
         # allocateTaskByManagerId(): Task
-        # removeTaskByManagerId(): Task
+        removeTaskByManagerId(taskId: String!, accountId: String!, accessToken: String!): String
         # updateTaskStatus(): Task
-        # createComment(): Comment
-        # removeComment(): Comment
+        createComment(commentInput: createCommentInput!, accountId: String!, accessToken: String!): String
+        removeCommentById(accountId: String!, accessToken: String!, commentId: String!): String
     }
 
     input createTaskInput {
@@ -48,9 +49,13 @@ export const TaskType = gql`
         deleted_at: String
 
         commented_by: String
-        comment: String
+        comment_description: String
         task_id: String
         # files
+    }
+    input createCommentInput {
+        comment_description: String!
+        task_id: String!
     }
 
     enum TaskStatusManger {
