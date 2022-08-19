@@ -10,7 +10,7 @@ export const TaskType = gql`
 
     extend type Mutation {
         createTaskByManagerId(taskInput: createTaskInput!, accountId: String!, accessToken: String!): String!
-        # allocateTaskByManagerId(): Task
+        # allocateTaskByManagerId(accountId: String!, accessToken: String!, assignedTo: String!, ): Task
         removeTaskByManagerId(taskId: String!, accountId: String!, accessToken: String!): String
         # updateTaskStatus(): Task
         createComment(commentInput: createCommentInput!, accountId: String!, accessToken: String!): String

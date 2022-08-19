@@ -13,7 +13,8 @@ export const AuthType = gql`
         createAccount(accountInput: AccountInput!, image: Upload): AccessToken!
         requestRegister(email: String!): JSON!
         registerBiometric(registerBiometricInput: JSON!): AccessToken!
-        resetPassword(email: String!): Boolean!
+        requestResetPassword(email: String!): Boolean!
+        resetPassword(resetTokenInput: resetInput!): Boolean!
         login(email: String!, password: String!): AccessToken!
         requestLoginChallenge(email: String!): JSON
         loginBiometric(loginBiometricInput: JSON!): AccessToken!
@@ -54,6 +55,11 @@ export const AuthType = gql`
         reset_token_time: String
         access_token: String
         stripe_subscription_id: String
+    }
+
+    input  resetInput {
+        resetToken: String!
+        password: String!
     }
 
     enum PlanType {

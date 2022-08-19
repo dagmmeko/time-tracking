@@ -12,6 +12,7 @@ import {generateRegistrationChallenge,
     verifyAuthenticatorAssertion} from "@webauthn/server"
 import { v4 as uuidv4 } from 'uuid';
 import Stripe from "stripe";
+import { AuthenticationError, UserInputError } from "apollo-server";
 
 export const AuthResolver = {
     Upload: GraphQLUpload,
@@ -34,22 +35,16 @@ export const AuthResolver = {
         var mailFormat = /\S+@\S+\.\S+/
 
         if (!mailFormat.test(args.accountInput.email)){
-            return {
-                access_token: "Wrong email format",
-                status: false
-            }
+            throw new AuthenticationError("Invalid email format")
         }
         const user = await collection.findOne({
             email: args.accountInput.email
         })
         if (user){
-            return {
-                access_token: "user exists",
-                status: false
-            }
+            throw new UserInputError("Email already exists")
         }
 
-        const token = jwt.sign({sub:  args.accountInput.name},  args.accountInput.email)
+        const token = jwt.sign({sub:  args.accountInput.email}, process.env.JWT_SECRETE)
 
         const accountInput = {
             created_at: new Date(),
@@ -89,7 +84,7 @@ export const AuthResolver = {
         const user = await collection.findOne({email: args.email})
 
         if (user && bcrypt.compareSync(args.password, user.password)){
-            const token = jwt.sign({sub: user.name}, args.email)
+            const token = jwt.sign({sub: user.email}, process.env.JWT_SECRETE)
 
             await collection.updateOne({_id: user._id}, {$set: { access_token: token } })
 
@@ -98,10 +93,7 @@ export const AuthResolver = {
                 status: true
             }
         }
-        return {
-            access_token: "",
-            status: false
-        }
+        throw new AuthenticationError("Invalid email or password")
     },
     logout: async(_, args)=>{
         const collection = db.collection('accounts');
@@ -111,17 +103,46 @@ export const AuthResolver = {
         if (val){
             return true
         }
+        throw new UserInputError("Error logging out")
+    },
+    requestResetPassword: async(_, args)=>{
+        const collection = db.collection('accounts')
+        var mailFormat = /\S+@\S+\.\S+/
+
+        if (!mailFormat.test(args.email)){
+            const user = await collection.findOne({email: args.email})
+
+            if (user){
+                const token = jwt.sign({sub: user._id.toString() },  process.env.JWT_SECRETE , {expiresIn: '1h'})
+
+                const val = await sendMail(args.email, token)
+                if (val){
+                    await collection.updateOne({_id: user._id}, {$set: { reset_token: token, reset_token_time: new Date() } })
+                    return true
+                }
+                throw new UserInputError("Error sending email")
+            }
+
+            throw new AuthenticationError("User not found")
+        }
+        throw new AuthenticationError("Wrong email format")
+        
     },
     resetPassword: async(_, args)=>{
-
-        const collection = db.collection('accounts')
-        const user = await collection.findOne({email: args.email})
-
-        if (user){
-            await sendMail(args.email)
+        var decode = jwt.verify(args.resetTokenInput.resetToken, process.env.JWT_SECRETE)
+        
+        if (decode){
+            const collection = db.collection('accounts')
+            const user = await collection.findOne({_id: new ObjectId(decode.sub)})
+            if (user){
+                const val = await collection.updateOne({_id: user._id}, {$set: { password: bcrypt.hashSync(args.resetTokenInput.password, 10), reset_token: null, reset_token_time: null } })
+                if (val){
+                    return true
+                }
+                throw new AuthenticationError("Error updating password")
+            } 
         }
-
-        return false
+        throw new AuthenticationError("Invalid token")        
     },
     requestRegister: async(_, args)=>{
         const challengeResponse = generateRegistrationChallenge({
@@ -132,11 +153,8 @@ export const AuthResolver = {
         const collection = db.collection('request_registers')
         const user = await collection.findOne({email: args.email})        
         if (user){
-            
-            throw new UserInputError('Invalid argument value');
-              
+            throw new UserInputError('Invalid argument value');        
         }
-
         await collection.insertOne({
             id: challengeResponse.user.id, 
             email: args.email, 
@@ -155,15 +173,12 @@ export const AuthResolver = {
         })
 
         if(!user) {
-            return {
-                access_token: "String",
-                status: false,
-            }
+            throw new AuthenticationError('Invalid challenge')
         }
 
         await request_register.updateOne({_id: user._id}, {$set: {key: key}})
 
-        const token = jwt.sign({sub:  user.id},  user.email)
+        const token = jwt.sign({sub:  user.id},  process.env.JWT_SECRETE)
 
         const accountInput = {
             created_at: new Date(),
@@ -194,7 +209,7 @@ export const AuthResolver = {
 
         const challengeData = request_register.findOne({email: args.email})
         if(!challengeData){
-            return {}
+            throw new AuthenticationError('Invalid email')
         }
 
         const loginChallenge = generateLoginChallenge(request_register.key)
@@ -207,24 +222,18 @@ export const AuthResolver = {
         const {challenge, keyId} = parseLoginRequest(args)
 
         if (!challenge) {
-            return {
-                access_token: "String",
-                status: false
-            }
+            throw new AuthenticationError('Can not create challenge')
         }
         const request_register = db.collection('request_register')
         const challengeData = request_register.findOne({challenge: challenge})
 
         if (!challengeData, !challengeData.key, challengeData.key.credID !== keyId){
-            return {
-                access_token: "String",
-                status: false
-            }
+            throw new AuthenticationError('Invalid challenge')
         }
 
         const loggedIn = verifyAuthenticatorAssertion(args, challengeData.key)
 
-        const token = jwt.sign({sub: challengeData.id}, challengeData.email)
+        const token = jwt.sign({sub: challengeData.id}, process.env.JWT_SECRETE)
         const accounts = db.collection('accounts')
 
         await accounts.updateOne({email: challengeData.email}, {$set: {
@@ -244,7 +253,7 @@ export const AuthResolver = {
             await accounts.updateOne({_id: user._id}, {$set: {payment_plan: args.payment_plan}})
             return true
         }
-        return false
+        throw new UserInputError("Error choosing payment plan")
     },
     createStripeCheckout: async(_, args)=>{
         const stripe = new Stripe(process.env.STRIPE_SK)
@@ -273,7 +282,7 @@ export const AuthResolver = {
 
             return session.url
         }
-        return "Failed to create Checkout session"
+        throw new UserInputError("Failed to create Checkout session")
     }
    }
 }

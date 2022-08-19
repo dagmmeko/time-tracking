@@ -1,10 +1,9 @@
 import nodemailer from "nodemailer"
 
-async function sendMail(email) {
-
-    console.log(email)
+async function sendMail(email, resetToken) {
 
     let transport = nodemailer.createTransport({
+        service: "gmail",
         host: process.env.SMTP_HOST,
         port: process.env.SMTP_PORT,
         auth: {
@@ -13,16 +12,23 @@ async function sendMail(email) {
         }
     })
 
-    let info = transport.sendMail({
-        from: process.env.SMTP_EMAIL,
-        to: "dagixmeko@gmail.com", // list of receivers
-        subject: "Hello ✔", // Subject line
-        text: "Hello world?", // plain text body
-        html: "<b>Hello world?</b>", // html bod
+    const info = await new Promise((resolve, reject) => {
+        transport.sendMail({
+            from: process.env.SMTP_EMAIL,
+            to: email, // list of receivers
+            subject: "Password reset link for Time Tracker", // Subject line
+            text: `${process.env.SMTP_HOST}/setPassword/accessToken?accessToken=${encodeURI(resetToken)}`, // plain text body
+        }, (err, info) => {
+            if (err) {
+                reject(err)
+                // console.log({err:err})
+            } else {
+                resolve(info)
+                // console.log({info: info})
+            }
+        })
     })
-
-    console.log("Message sent: %s", info);
-
+    return info
 }
 
 export default sendMail
