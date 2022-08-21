@@ -19,7 +19,7 @@ export const TaskType = gql`
 
     input createTaskInput {
         task_name: String!
-        assigned_to: String!
+        assigned_to: [String!]
 
         task_description: String!
         task_due_date: String!

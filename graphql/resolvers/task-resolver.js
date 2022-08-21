@@ -1,6 +1,6 @@
 import db from "../../index.js"
 import { ObjectId } from "mongodb";
-import {AuthenticationError} from "apollo-server"
+import {AuthenticationError, UserInputError} from "apollo-server"
 
 
 export const TaskResolver = {
@@ -25,9 +25,13 @@ export const TaskResolver = {
 
             if (user && user.access_token === args.accessToken, user.account_type === "WORKER"){
                 const tasks = db.collection('tasks');
-                const taskData = await tasks.find({assigned_to: args.accountId, status: args.status}).toArray();
+                const taskData = await tasks.find({assigned_to: {$in: [new ObjectId(args.accountId)]}, status: args.status}).toArray();
+                
+                if (taskData.length > 0){
+                    return taskData
 
-                return taskData
+                }
+                throw new UserInputError("You have no tasks")
             }
 
             throw new AuthenticationError("You are not authorized to get tasks")
@@ -41,7 +45,9 @@ export const TaskResolver = {
                 const tasks = db.collection('tasks');
                 const taskData = await tasks.findOne({_id: new ObjectId(args.taskId)});
                 
-                if (taskData.assigned_to.toString() === args.accountId || taskData.created_by.toString() === args.accountId){
+                const taskFoundForWorker = taskData.assigned_to.find(assigned_to => assigned_to.toString() === args.accountId)
+
+                if (taskFoundForWorker || taskData.created_by.toString() === args.accountId){
                     return taskData
                 }
                 throw new AuthenticationError("You are not authorized to get this task")
@@ -71,7 +77,14 @@ export const TaskResolver = {
             const accounts = db.collection('accounts');
             const user = await accounts.findOne({_id: new ObjectId(args.accountId) })
 
+            // console.log(args, user)
+
             if (user && user.access_token === args.accessToken, user.account_type === "MANAGER"){
+               const assignedTo = [];
+                args.taskInput.assigned_to.forEach(async(item)=>{
+                    assignedTo.push(new ObjectId(item))
+                })
+
                 const taskCreate = db.collection('tasks');
                 const taskCreateData = {
                     created_at: new Date(),
@@ -80,7 +93,7 @@ export const TaskResolver = {
 
                     task_name: args.taskInput.task_name,
                     category: "Category",
-                    assigned_to: new ObjectId(args.taskInput.assigned_to),
+                    assigned_to: assignedTo,
 
                     task_description: args.taskInput.task_description,
                     task_due_date: args.taskInput.task_due_date,
