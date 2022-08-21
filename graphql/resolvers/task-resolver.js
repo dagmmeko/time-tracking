@@ -12,7 +12,6 @@ export const TaskResolver = {
             if (user && user.access_token === args.accessToken, user.account_type === "MANAGER"){
                 const tasks = db.collection('tasks');
                 const taskData = await tasks.find({created_by: new ObjectId(args.accountId), status: args.status}).toArray();
-                console.log(taskData)
 
                 return taskData
             }

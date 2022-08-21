@@ -11,13 +11,18 @@ import {InvoiceType} from './graphql/type-defs/invoice-type.js';
 import {InvoiceResolver} from './graphql/resolvers/invoice-resolver.js';
 import {TaskType} from './graphql/type-defs/task-type.js';
 import {TaskResolver} from './graphql/resolvers/task-resolver.js';
+import { ReportResolver } from "./graphql/resolvers/report-resolver.js";
+import { ReportType } from "./graphql/type-defs/report-type.js";
 import "./utils/stripe-webhook.js"
 
 
 const url = 'mongodb://localhost:27017';
 
 const client = new MongoClient(url, { useUnifiedTopology: true } );
-const server = new ApolloServer({typeDefs: [GlobalType ,AuthType, InvoiceType, TaskType ], resolvers: [GlobalResolver ,AuthResolver,InvoiceResolver, TaskResolver] })
+const server = new ApolloServer({
+    typeDefs: [GlobalType ,AuthType, InvoiceType, TaskType,ReportType ], 
+    resolvers: [GlobalResolver ,AuthResolver,InvoiceResolver, TaskResolver, ReportResolver] 
+})
 const db = client.db("time-tracker")
 
 await client.connect().then(()=> {
