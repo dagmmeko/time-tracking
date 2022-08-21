@@ -1,8 +1,13 @@
 import {gql} from "apollo-server"
 
 export const InvoiceType = gql`
+    scalar Upload
+
     extend type Query { 
         getInvoice(accountId: String!, accessToken: String!): [Invoice]
+    }
+    extend type Mutation {
+        testUpload(file: Upload!): String
     }
     type Invoice {
         account_id: String!

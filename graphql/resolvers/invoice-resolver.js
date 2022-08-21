@@ -1,7 +1,10 @@
 import db from "../../index.js"
 import { ObjectId } from "mongodb";
+import {GraphQLUpload} from "graphql-upload"
+
 
 export const InvoiceResolver = {
+    Upload: GraphQLUpload,
     Query: {
          getInvoice: async(_, args)=>{
             const accounts = db.collection('accounts');
@@ -14,6 +17,19 @@ export const InvoiceResolver = {
                 return invoiceData;
             }
             return null;
+        }
+    },
+    Mutation:{
+        testUpload: async(_, args)=>{
+            const bucket = new mongodb.GridFSBucket(db, {bucketName: 'uploads'});
+            
+            const {createReadStream} = await args.file
+
+            createReadStream().pipe(bucket.openUploadStream('file'))
+            .on('error', (err)=>{ console.error(err)})
+            .on('finish', (file)=>{ console.log(file)})
+
+            return "uploaded"
         }
     }
 }

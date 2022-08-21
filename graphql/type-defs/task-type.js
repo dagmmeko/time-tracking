@@ -10,11 +10,12 @@ export const TaskType = gql`
 
     extend type Mutation {
         createTaskByManagerId(taskInput: createTaskInput!, accountId: String!, accessToken: String!): String!
-        # allocateTaskByManagerId(accountId: String!, accessToken: String!, assignedTo: String!, ): Task
+        allocateTaskByManagerId(accountId: String!, accessToken: String!,taskInput: updateTaskInput! ): String!
         removeTaskByManagerId(taskId: String!, accountId: String!, accessToken: String!): String
-        # updateTaskStatus(): Task
         createComment(commentInput: createCommentInput!, accountId: String!, accessToken: String!): String
         removeCommentById(accountId: String!, accessToken: String!, commentId: String!): String
+        changeTaskStatusByWorker(taskId: String!, accountId: String!, accessToken: String!, status: TaskStatus!): String
+
     }
 
     input createTaskInput {
@@ -25,6 +26,16 @@ export const TaskType = gql`
         task_due_date: String!
     }
 
+    input updateTaskInput {
+        task_id: String!
+        task_name: String
+        category: String
+        assigned_to: [String]
+        
+        task_description: String
+        task_due_date: String
+    }
+
     type Task {
         created_at: String!
         updated_at: String
@@ -32,7 +43,7 @@ export const TaskType = gql`
 
         task_name: String!
         category: String!
-        assigned_to: String
+        assigned_to: [String]
         
         task_description: String
         task_due_date: String
@@ -58,12 +69,6 @@ export const TaskType = gql`
         task_id: String!
     }
 
-    enum TaskStatusManger {
-        PAUSE
-        START
-        IN_PREVIEW
-        COMPLETE
-    }
     enum TaskStatus {
         NEW
         ACTIVE

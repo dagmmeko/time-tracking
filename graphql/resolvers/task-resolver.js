@@ -108,6 +108,37 @@ export const TaskResolver = {
             }
             throw new AuthenticationError("You are not authorized to create a task")
         }, 
+        allocateTaskByManagerId: async(_, args)=>{
+            const accounts = db.collection('accounts');
+            const user = await accounts.findOne({_id: new ObjectId(args.accountId) })
+
+            if (user && user.access_token === args.accessToken, user.account_type === "MANAGER"){
+                const assignedTo = [];
+                args.taskInput.assigned_to ? args.taskInput.assigned_to.forEach(async(item)=>{
+                    assignedTo.push(new ObjectId(item))
+                }) : null
+
+                const taskUpdate = db.collection('tasks');
+                const task = await taskUpdate.findOne({_id: new ObjectId(args.taskInput.task_id)});
+                if (task.created_by.toString() === args.accountId){
+                    const taskUpdateResult = await taskUpdate.updateOne(
+                        {_id: new ObjectId(args.taskInput.task_id)}, 
+                        {$set: {
+                            updated_at: new Date(),
+                            task_name: args.taskInput.task_name || task.task_name,
+                            category: args.taskInput.category || task.category,
+                            assigned_to: assignedTo || task.assigned_to,
+                            task_description: args.taskInput.task_description || task.task_description,
+                            task_due_date: args.taskInput.task_due_date || task.task_due_date,
+                        }}
+                    )
+
+                    return taskUpdateResult.modifiedCount;  
+                }
+                throw new UserInputError("Task not found")
+            }
+            throw new AuthenticationError("You are not authorized to update this task")
+        },
         removeTaskByManagerId: async(_, args)=>{
             const accounts = db.collection('accounts');
             const user = await accounts.findOne({_id: new ObjectId(args.accountId) })
@@ -168,6 +199,24 @@ export const TaskResolver = {
                 
             }
             throw new AuthenticationError("You are not authorized to remove this comment")
+        },
+        changeTaskStatusByWorker: async(_, args)=>{
+            const accounts = db.collection('accounts');
+            const user = await accounts.findOne({_id: new ObjectId(args.accountId) })
+
+            if (user && user.access_token === args.accessToken){
+                const tasks = db.collection('tasks');
+                const taskData = await tasks.findOne({_id: new ObjectId(args.taskId)});
+                const taskFoundForWorker = taskData.assigned_to.find(assigned_to => assigned_to.toString() === args.accountId)
+
+                if (taskFoundForWorker){
+
+                    const taskUpdateData = await tasks.updateOne({_id: new ObjectId(args.taskId)}, {$set: {status: args.status}});
+                    return taskUpdateData.modifiedCount;
+                }
+                throw new AuthenticationError("You are not authorized to change this task status")
+            }
+            throw new AuthenticationError("You are not authorized to change this task status")
         }
     }
 }

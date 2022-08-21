@@ -20,8 +20,9 @@ const url = 'mongodb://localhost:27017';
 
 const client = new MongoClient(url, { useUnifiedTopology: true } );
 const server = new ApolloServer({
-    typeDefs: [GlobalType ,AuthType, InvoiceType, TaskType,ReportType ], 
-    resolvers: [GlobalResolver ,AuthResolver,InvoiceResolver, TaskResolver, ReportResolver] 
+    typeDefs: [GlobalType ,AuthType, InvoiceType, TaskType,  ReportType ], 
+    resolvers: [GlobalResolver ,AuthResolver,InvoiceResolver, TaskResolver, ReportResolver],
+    csrfPrevention: true
 })
 const db = client.db("time-tracker")
 
