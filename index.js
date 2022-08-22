@@ -16,19 +16,17 @@ import { ReportType } from "./graphql/type-defs/report-type.js";
 import "./utils/stripe-webhook.js"
 
 
-const url = 'mongodb://localhost:27017';
-
-const client = new MongoClient(url, { useUnifiedTopology: true } );
+const client = new MongoClient(process.env.DB_URL, { useUnifiedTopology: true } );
 const server = new ApolloServer({
     typeDefs: [GlobalType ,AuthType, InvoiceType, TaskType,  ReportType ], 
     resolvers: [GlobalResolver ,AuthResolver,InvoiceResolver, TaskResolver, ReportResolver],
     csrfPrevention: true
 })
-const db = client.db("time-tracker")
+const db = client.db(process.env.DB_NAME)
 
-await client.connect().then(()=> {
+client.connect().then(()=> {
     console.log('Connected successfully to server');
-    return server.listen({port: 8000})
+    return server.listen({port: process.env.GQL_PORT})
 });
 
 export default db
