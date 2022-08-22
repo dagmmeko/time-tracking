@@ -2,6 +2,7 @@ import dotenv from "dotenv"
 dotenv.config()
 
 import { MongoClient } from 'mongodb'
+import {ApolloServerPluginLandingPageGraphQLPlayground} from "apollo-server-core"
 import { ApolloServer } from 'apollo-server';
 import {GlobalType} from "./graphql/type-defs/_global-type.js"
 import {GlobalResolver} from "./graphql/resolvers/_global-resolver.js"
@@ -17,10 +18,12 @@ import "./utils/stripe-webhook.js"
 
 
 const client = new MongoClient(process.env.DB_URL, { useUnifiedTopology: true } );
+
 const server = new ApolloServer({
     typeDefs: [GlobalType ,AuthType, InvoiceType, TaskType,  ReportType ], 
     resolvers: [GlobalResolver ,AuthResolver,InvoiceResolver, TaskResolver, ReportResolver],
-    csrfPrevention: true
+    csrfPrevention: true,
+    plugins: [ApolloServerPluginLandingPageGraphQLPlayground()]
 })
 const db = client.db(process.env.DB_NAME)
 
