@@ -20,16 +20,15 @@ export const AuthResolver = {
     Query: {
        getAccount: async(_, args) => {
             const collection = db.collection('accounts');
-           const user = await collection.findOne({_id: new ObjectId(args.id) })
-           if (user && args.access_token !== null && user.access_token === args.access_token)
-            return user
-           else 
-            return  
+            const user = await collection.findOne({_id: new ObjectId(args.id) })
+            if (user && args.access_token !== null && user.access_token === args.access_token)
+                return user
+            else 
+                return  
        }
    },
    Mutation: {
-    createAccount: async(_, args) => {
-        
+    createAccount: async(_, args) => {       
         const collection = db.collection('accounts');
 
         var mailFormat = /\S+@\S+\.\S+/
@@ -40,44 +39,47 @@ export const AuthResolver = {
         const user = await collection.findOne({
             email: args.accountInput.email
         })
-        if (user){
-            throw new UserInputError("Email already exists")
-        }
+        if (!user){
+            const token = jwt.sign({sub:  args.accountInput.email}, process.env.JWT_SECRETE)
 
-        const token = jwt.sign({sub:  args.accountInput.email}, process.env.JWT_SECRETE)
-
-        const accountInput = {
-            created_at: new Date(),
-            updated_at: null,
-            deleted_at: null,
-    
-            name: args.accountInput.name,
-    
-            email: args.accountInput.email,
-            account_type: args.accountInput.account_type,
-            password: bcrypt.hashSync(args.accountInput.password, 10),
-            payment_plan: null,
-            payment_status: false,
-            reset_token: null,
-            reset_token_time: null,
-            access_token: token,
-            stripe_subscription_id: null
-        }
-
-        const insertedUser = await collection.insertOne(accountInput)
-
-        // const bucket = new mongodb.GridFSBucket(db, { bucketName: 'accountImage' });
-
-        // const {createReadStream } = await args.image
-
-        // createReadStream().pipe(bucket.openUploadStream(insertedUser._id.toString(), {
-        //  metadata: { account_id: insertedUser._id.toString() }
-        // }))
+            const accountInput = {
+                created_at: new Date(),
+                updated_at: null,
+                deleted_at: null,
         
-        return {
-            access_token: token,
-            status: true
+                name: args.accountInput.name,
+        
+                email: args.accountInput.email,
+                account_type: args.accountInput.account_type,
+                password: bcrypt.hashSync(args.accountInput.password, 10),
+                payment_plan: null,
+                payment_status: false,
+                reset_token: null,
+                reset_token_time: null,
+                access_token: token,
+                stripe_subscription_id: null
+            }
+
+            const insertedUser = await collection.insertOne(accountInput)
+
+            // const bucket = new mongodb.GridFSBucket(db, { bucketName: 'accountImage' });
+
+            // const {createReadStream } = await args.image
+
+            // createReadStream().pipe(bucket.openUploadStream(insertedUser._id.toString(), {
+            //  metadata: { account_id: insertedUser._id.toString() }
+            // }))
+        
+            console.log(insertedUser)
+            return {
+                account_id: insertedUser.insertedId,
+                access_token: token,
+                status: true
+            }
         }
+        throw new UserInputError("Email already exists")
+
+        
     },
     login: async(_, args) =>{
         const collection = db.collection('accounts')
@@ -87,8 +89,10 @@ export const AuthResolver = {
             const token = jwt.sign({sub: user.email}, process.env.JWT_SECRETE)
 
             await collection.updateOne({_id: user._id}, {$set: { access_token: token } })
+            
 
             return {
+                account_id: user._id,
                 access_token: token,
                 status: true
             }
@@ -197,9 +201,10 @@ export const AuthResolver = {
             access_token: token
         }
         
-        await accounts.insertOne(accountInput)
+        const insertedId = await accounts.insertOne(accountInput)
 
         return {
+            account_id: insertedId.insertedId,
             access_token: token,
             status: true,
         }
@@ -241,6 +246,7 @@ export const AuthResolver = {
         }})
 
         return {
+            account_id: loggedIn,
             access_token: token,
             status: true
         }

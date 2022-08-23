@@ -22,8 +22,7 @@ const client = new MongoClient(process.env.DB_URL, { useUnifiedTopology: true } 
 const server = new ApolloServer({
     typeDefs: [GlobalType ,AuthType, InvoiceType, TaskType,  ReportType ], 
     resolvers: [GlobalResolver ,AuthResolver,InvoiceResolver, TaskResolver, ReportResolver],
-    csrfPrevention: true,
-    plugins: [ApolloServerPluginLandingPageGraphQLPlayground()]
+    csrfPrevention: true
 })
 const db = client.db(process.env.DB_NAME)
 

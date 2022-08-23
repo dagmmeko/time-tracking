@@ -25,6 +25,7 @@ export const AuthType = gql`
     }
     
     type AccessToken {
+        account_id: String!
         access_token: String!
         status: Boolean
     }
