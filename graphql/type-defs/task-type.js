@@ -2,19 +2,19 @@ import {gql} from "apollo-server"
 
 export const TaskType = gql`
     extend type Query {
-        getTaskListByManager(accountId: String!, accessToken: String!, status: TaskStatus!): [Task]
-        getTaskListByWorkerId(accountId: String!, accessToken: String!, status: TaskStatus!): [Task]
-        getTaskDetailById(taskId: String!, accessToken: String!, accountId: String!): Task
-        getCommentByTaskId(taskId: String!, accessToken: String!, accountId: String!): [Comment]
+        getTaskListByManager(accessToken: String!, status: TaskStatus!): [Task]
+        getTaskListByWorkerId(accessToken: String!, status: TaskStatus!): [Task]
+        getTaskDetailById(taskId: String!, accessToken: String!): Task
+        getCommentByTaskId(taskId: String!, accessToken: String!): [Comment]
     }
 
     extend type Mutation {
-        createTaskByManagerId(taskInput: createTaskInput!, accountId: String!, accessToken: String!): String!
-        allocateTaskByManagerId(accountId: String!, accessToken: String!,taskInput: updateTaskInput! ): String!
-        removeTaskByManagerId(taskId: String!, accountId: String!, accessToken: String!): String
-        createComment(commentInput: createCommentInput!, accountId: String!, accessToken: String!): String
-        removeCommentById(accountId: String!, accessToken: String!, commentId: String!): String
-        changeTaskStatusByWorker(taskId: String!, accountId: String!, accessToken: String!, status: TaskStatus!): String
+        createTaskByManagerId(taskInput: createTaskInput!, accessToken: String!): String!
+        allocateTaskByManagerId(accessToken: String!,taskInput: updateTaskInput! ): String!
+        removeTaskByManagerId(taskId: String!, accessToken: String!): String
+        createComment(commentInput: createCommentInput!, accessToken: String!): String
+        removeCommentById(accessToken: String!, commentId: String!): String
+        changeTaskStatusByWorker(taskId: String!, accessToken: String!, status: TaskStatus!): String
 
     }
 

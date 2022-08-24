@@ -19,12 +19,20 @@ export const AuthResolver = {
     JSON: GraphQLJSON,
     Query: {
        getAccount: async(_, args) => {
-            const collection = db.collection('accounts');
-            const user = await collection.findOne({_id: new ObjectId(args.id) })
-            if (user && args.access_token !== null && user.access_token === args.access_token)
-                return user
-            else 
-                return  
+            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+
+            if (decode){
+                const collection = db.collection('accounts');
+                const user = await collection.findOne({_id: new ObjectId(decode.sub) })
+
+                if (user)
+                    return user
+                else 
+                    throw new UserInputError("User not found")  
+
+            }
+            throw new UserInputError("Access Token incorrect!")
+      
        }
    },
    Mutation: {
@@ -40,7 +48,6 @@ export const AuthResolver = {
             email: args.accountInput.email
         })
         if (!user){
-            const token = jwt.sign({sub:  args.accountInput.email}, process.env.JWT_SECRETE)
 
             const accountInput = {
                 created_at: new Date(),
@@ -56,12 +63,19 @@ export const AuthResolver = {
                 payment_status: false,
                 reset_token: null,
                 reset_token_time: null,
-                access_token: token,
+                access_token: null,
                 stripe_subscription_id: null
             }
 
             const insertedUser = await collection.insertOne(accountInput)
 
+            if (insertedUser) {
+                const token = jwt.sign({sub:  insertedUser.insertedId}, process.env.JWT_SECRET)
+                await collection.updateOne({_id: insertedUser.insertedId}, {$set: {access_token: token}})
+
+                return  token
+            }
+            throw new UserInputError("Error assigning access token")
             // const bucket = new mongodb.GridFSBucket(db, { bucketName: 'accountImage' });
 
             // const {createReadStream } = await args.image
@@ -70,12 +84,7 @@ export const AuthResolver = {
             //  metadata: { account_id: insertedUser._id.toString() }
             // }))
         
-            console.log(insertedUser)
-            return {
-                account_id: insertedUser.insertedId,
-                access_token: token,
-                status: true
-            }
+            
         }
         throw new UserInputError("Email already exists")
 
@@ -86,28 +95,30 @@ export const AuthResolver = {
         const user = await collection.findOne({email: args.email})
 
         if (user && bcrypt.compareSync(args.password, user.password)){
-            const token = jwt.sign({sub: user.email}, process.env.JWT_SECRETE)
+            const token = jwt.sign({sub: user._id}, process.env.JWT_SECRET)
 
             await collection.updateOne({_id: user._id}, {$set: { access_token: token } })
             
 
-            return {
-                account_id: user._id,
-                access_token: token,
-                status: true
-            }
+            return token
         }
         throw new AuthenticationError("Invalid email or password")
     },
     logout: async(_, args)=>{
-        const collection = db.collection('accounts');
-        const user = await collection.findOne({_id: new ObjectId(args.id) })
-        
-        const val = await collection.updateOne({_id: user._id}, {$set: { access_token: null } })
-        if (val){
-            return true
+        var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+
+        if (decode){
+            const collection = db.collection('accounts');
+            const user = await collection.findOne({_id: new ObjectId(decode.sub) })
+            console.log(user)
+
+            const val = await collection.updateOne({_id: user._id}, {$set: { access_token: null } })
+            if (val){
+                return true
+            }
+            throw new UserInputError("Error logging out")
         }
-        throw new UserInputError("Error logging out")
+        throw new UserInputError("Access token invalid.")
     },
     requestResetPassword: async(_, args)=>{
         const collection = db.collection('accounts')
@@ -117,7 +128,7 @@ export const AuthResolver = {
             const user = await collection.findOne({email: args.email})
 
             if (user){
-                const token = jwt.sign({sub: user._id.toString() },  process.env.JWT_SECRETE , {expiresIn: '1h'})
+                const token = jwt.sign({sub: user._id.toString() },  process.env.JWT_SECRET , {expiresIn: '1h'})
 
                 const val = await sendMail(args.email, token)
                 if (val){
@@ -133,7 +144,7 @@ export const AuthResolver = {
         
     },
     resetPassword: async(_, args)=>{
-        var decode = jwt.verify(args.resetTokenInput.resetToken, process.env.JWT_SECRETE)
+        var decode = jwt.verify(args.resetTokenInput.resetToken, process.env.JWT_SECRET)
         
         if (decode){
             const collection = db.collection('accounts')
@@ -182,7 +193,7 @@ export const AuthResolver = {
 
         await request_register.updateOne({_id: user._id}, {$set: {key: key}})
 
-        const token = jwt.sign({sub:  user.id},  process.env.JWT_SECRETE)
+        const token = jwt.sign({sub:  user.id},  process.env.JWT_SECRET)
 
         const accountInput = {
             created_at: new Date(),
@@ -203,11 +214,7 @@ export const AuthResolver = {
         
         const insertedId = await accounts.insertOne(accountInput)
 
-        return {
-            account_id: insertedId.insertedId,
-            access_token: token,
-            status: true,
-        }
+        return token
     },
     requestLoginChallenge: async (_, args) => {
         const request_register = db.collection('request_registers')
@@ -238,57 +245,62 @@ export const AuthResolver = {
 
         const loggedIn = verifyAuthenticatorAssertion(args, challengeData.key)
 
-        const token = jwt.sign({sub: challengeData.id}, process.env.JWT_SECRETE)
+        const token = jwt.sign({sub: challengeData.id}, process.env.JWT_SECRET)
         const accounts = db.collection('accounts')
 
         await accounts.updateOne({email: challengeData.email}, {$set: {
             access_token: token
         }})
 
-        return {
-            account_id: loggedIn,
-            access_token: token,
-            status: true
-        }
+        return token
     },
     choosePaymentPlan: async(_, args) =>{
-        const accounts = db.collection('accounts')
-        const user = await accounts.findOne({_id: new ObjectId(args.account_id)})
+        var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
 
-        if (user && user.access_token === args.access_token && user.account_type === "COMPANY_REPRESENTATIVE"){
-            await accounts.updateOne({_id: user._id}, {$set: {payment_plan: args.payment_plan}})
-            return true
+        if (decode){
+            const accounts = db.collection('accounts')
+            const user = await accounts.findOne({_id: new ObjectId(decode.sub)})
+
+            if (user && user.account_type === "COMPANY_REPRESENTATIVE"){
+                await accounts.updateOne({_id: user._id}, {$set: {payment_plan: args.payment_plan}})
+                return true
+            }
+            throw new UserInputError("Error choosing payment plan")
         }
-        throw new UserInputError("Error choosing payment plan")
+        throw new UserInputError("Access token invalid.")
     },
     createStripeCheckout: async(_, args)=>{
-        const stripe = new Stripe(process.env.STRIPE_SK)
-        const accounts= db.collection('accounts')
-        const payment_plan = db.collection('payment_plans')
-        
-        const user = await accounts.findOne({_id: new ObjectId(args.account_id)})
+        var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
 
-        
-        if (user && user.access_token === args.access_token && user.account_type === "COMPANY_REPRESENTATIVE"){
-            const payment_price = await payment_plan.findOne({type: user.payment_plan})
-            const session = await stripe.checkout.sessions.create({
-                line_items: [{
-                    price: payment_price.price_id,
-                    quantity: 1
-                }],
-                mode: "subscription",
-                success_url: args.success_url,
-                cancel_url: args.cancel_url,
-                metadata: {
-                    account_id: args.account_id
-                }
-            })
+        if (decode) {
+            const stripe = new Stripe(process.env.STRIPE_SK)
+            const accounts= db.collection('accounts')
+            const payment_plan = db.collection('payment_plans')
+            
+            const user = await accounts.findOne({_id: new ObjectId(decode.sub)})
 
-            // console.log(session.url)
+            
+            if (user && user.account_type === "COMPANY_REPRESENTATIVE"){
+                const payment_price = await payment_plan.findOne({type: user.payment_plan})
+                const session = await stripe.checkout.sessions.create({
+                    line_items: [{
+                        price: payment_price.price_id,
+                        quantity: 1
+                    }],
+                    mode: "subscription",
+                    success_url: args.successUrl,
+                    cancel_url: args.cancelUrl,
+                    metadata: {
+                        account_id: user._id
+                    }
+                })
 
-            return session.url
+                return session.url
+            }
+            throw new UserInputError("Failed to create Checkout session")
         }
-        throw new UserInputError("Failed to create Checkout session")
+        throw new UserInputError("Access token invalid.")
+        
     }
    }
 }

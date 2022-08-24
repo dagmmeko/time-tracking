@@ -6,40 +6,43 @@ export const AuthType = gql`
     scalar JSON
 
     extend type Query {
-        getAccount(id: String!, access_token: String!): Account     
+        getAccount(accessToken: String!): AccountOutput     
     }
 
     extend type Mutation {
-        createAccount(accountInput: AccountInput!, image: Upload): AccessToken!
+        createAccount(accountInput: AccountInput!, image: Upload): String!
         requestRegister(email: String!): JSON!
-        registerBiometric(registerBiometricInput: JSON!): AccessToken!
+        registerBiometric(registerBiometricInput: JSON!): String!
         requestResetPassword(email: String!): Boolean!
-        resetPassword(resetTokenInput: resetInput!): Boolean!
-        login(email: String!, password: String!): AccessToken!
+        resetPassword(resetTokenInput: ResetInput!): Boolean!
+        login(email: String!, password: String!): String!
         requestLoginChallenge(email: String!): JSON
-        loginBiometric(loginBiometricInput: JSON!): AccessToken!
-        logout(id: String!): Boolean!
-        updateAccount(id: ID!, access_token: String, ): Boolean!
-        choosePaymentPlan(account_id: String!, access_token: String!, payment_plan: PlanType!): Boolean
-        createStripeCheckout(account_id: String!, access_token: String!, success_url: String!, cancel_url: String!): String! 
+        loginBiometric(loginBiometricInput: JSON!): String!
+        logout(accessToken: String!): Boolean!
+        # updateAccount(accessToken: String): Boolean!
+        choosePaymentPlan(accessToken: String!, paymentPlan: PlanType!): Boolean
+        createStripeCheckout(accessToken: String!, successUrl: String!, cancelUrl: String!): String! 
     }
     
-    type AccessToken {
-        account_id: String!
-        access_token: String!
-        status: Boolean
-    }
-
     input AccountInput {
+        name: String!
+        email: String!
+        password: String!
+        account_type: AccountType     
+    }
+    
+    type AccountOutput {
+        created_at: String!
+        updated_at: String
+        deleted_at: String
+
         name: String!
 
         email: String!
-        password: String!
         account_type: AccountType
-
-      
+        payment_plan: PlanType
+        payment_status: Boolean!
     }
-    
     type Account {
         created_at: String!
         updated_at: String
@@ -58,7 +61,7 @@ export const AuthType = gql`
         stripe_subscription_id: String
     }
 
-    input  resetInput {
+    input  ResetInput {
         resetToken: String!
         password: String!
     }

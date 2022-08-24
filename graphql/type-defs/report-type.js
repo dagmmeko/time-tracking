@@ -2,21 +2,21 @@ import { gql } from "apollo-server";
 
 export const ReportType = gql`
     extend type Query {
-        getExpenseReports(accountId: String!, accessToken: String!): [ExpenseReport]
-        getIncidentReports(accountId: String!, accessToken: String!): [IncidentReport]
+        getExpenseReports(accessToken: String!): [ExpenseReport]
+        getIncidentReports(accessToken: String!): [IncidentReport]
     }
     extend type Mutation {
-        createExpenseReport(reportInput: createExpenseReportInput!, accountId: String!, accessToken: String!): String!
-        updateExpenseReport(reportInput: updateExpenseReportInput!, accountId: String!, accessToken: String!): String!
-        removeExpenseReport(reportId: String!, accountId: String!, accessToken: String!): String!
-        createIncidentReport(reportInput: createIncidentReportInput!, accountId: String!, accessToken: String!): String!
-        updateIncidentReport(reportInput: updateIncidentReportInput!, accountId: String!, accessToken: String!):String!
-        removeIncidentReport(reportId: String!, accountId: String!, accessToken: String!): String!
+        createExpenseReport(reportInput: CreateExpenseReportInput!, accessToken: String!): String!
+        updateExpenseReport(reportInput: UpdateExpenseReportInput!, accessToken: String!): String!
+        removeExpenseReport(reportId: String!, accessToken: String!): String!
+        createIncidentReport(reportInput: CreateIncidentReportInput!, accessToken: String!): String!
+        updateIncidentReport(reportInput: UpdateIncidentReportInput!, accessToken: String!):String!
+        removeIncidentReport(reportId: String!, accessToken: String!): String!
     }
 
     type ExpenseReport {
         created_at: String!
-        updated_at: String
+        updated_at: Strings
         deleted_at: String
 
         report_description: String!
@@ -30,7 +30,7 @@ export const ReportType = gql`
         created_by: String!
     }
 
-    input createExpenseReportInput {
+    input CreateExpenseReportInput {
         report_description: String!
         amount: Float!
         task_id: String!
@@ -39,7 +39,7 @@ export const ReportType = gql`
         expense_date: String!
     }
 
-    input updateExpenseReportInput{
+    input UpdateExpenseReportInput{
         report_id: String!
         report_description: String
         amount: Float
@@ -65,7 +65,7 @@ export const ReportType = gql`
         created_by: String!
     }
 
-    input createIncidentReportInput{
+    input CreateIncidentReportInput{
         task_id: String!
         incident_date: String!,
         mistake_description: String!,
@@ -75,7 +75,7 @@ export const ReportType = gql`
         note: String!,
     }
 
-    input updateIncidentReportInput{
+    input UpdateIncidentReportInput{
         report_id: String!
         task_id: String
         incident_date: String,

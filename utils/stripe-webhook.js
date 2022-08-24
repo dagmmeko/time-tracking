@@ -6,8 +6,6 @@ import { ObjectId } from "mongodb";
 import dotenv from "dotenv"
 dotenv.config()
 
-const endpointSecret = "whsec_is6ZaoEp3a8iSfC4hyLxCAMcfhiP3hoc"
-
 const server = http.createServer(async (req, res) => {
     const body = await new Promise((resolve)=>{
         req.setEncoding('utf8');
@@ -28,7 +26,7 @@ const server = http.createServer(async (req, res) => {
     let event;
 
     try {
-        event = Stripe.webhooks.constructEvent(body, sig, endpointSecret);
+        event = Stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_ENDPOINT);
     } catch (err) {
         res.statusCode = 400
         res.write(`Webhook Error: ${err.message}`);
