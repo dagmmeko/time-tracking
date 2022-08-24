@@ -16,7 +16,7 @@ export const ReportType = gql`
 
     type ExpenseReport {
         created_at: String!
-        updated_at: Strings
+        updated_at: String
         deleted_at: String
 
         report_description: String!
