@@ -6,13 +6,14 @@ import jwt from "jsonwebtoken"
 
 export const TaskResolver = {
     Query: {
-        getTaskList: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+        getTaskList: async(_, args, context)=>{
+            console.log(context.token)
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
             if (decode){
                 const accounts = db.collection('accounts');
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
-                
+
                 if (user){
                     const tasks = db.collection('tasks');
                     if (args.status){
@@ -42,14 +43,14 @@ export const TaskResolver = {
             throw new UserInputError("Access token invalid")
 
         },
-        getTaskDetailById: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+        getTaskDetailById: async(_, args, context)=>{
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
             if (decode){
                 const accounts = db.collection('accounts');
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
     
-                if (user && user.access_token === args.accessToken){
+                if (user && user.access_token === context.token){
                     const tasks = db.collection('tasks');
                     const taskData = await tasks.findOne({_id: new ObjectId(args.taskId)});
                     
@@ -64,15 +65,15 @@ export const TaskResolver = {
             }
             throw new UserInputError("Access token invalid")
         },
-        getCommentByTaskId: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+        getCommentByTaskId: async(_, args, context)=>{
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
             if (decode){
                 const accounts = db.collection('accounts');
 
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
     
-                if (user && user.access_token === args.accessToken){
+                if (user && user.access_token === context.token){
                     const tasks = db.collection('tasks');
                     const taskData = await tasks.findOne({_id: new ObjectId(args.taskId)});
                     if (taskData.assigned_to.toString() === decode.sub || taskData.created_by.toString() === decode.sub){
@@ -90,8 +91,8 @@ export const TaskResolver = {
         }
     },
     Mutation: {
-        createTaskByManagerId: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+        createTaskByManagerId: async(_, args, context)=>{
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
             if (decode){
                 const accounts = db.collection('accounts');
@@ -99,7 +100,7 @@ export const TaskResolver = {
     
                 // console.log(args, user)
     
-                if (user && user.access_token === args.accessToken, user.account_type === "MANAGER"){
+                if (user && user.access_token === context.token, user.account_type === "MANAGER"){
                    const assignedTo = [];
                     args.taskInput.assigned_to.forEach(async(item)=>{
                         assignedTo.push(new ObjectId(item))
@@ -133,14 +134,14 @@ export const TaskResolver = {
 
             throw new UserInputError("Access token invalid")
         }, 
-        allocateTaskByManagerId: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+        allocateTaskByManagerId: async(_, args, context)=>{
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
             if (decode){
                 const accounts = db.collection('accounts');
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
     
-                if (user && user.access_token === args.accessToken, user.account_type === "MANAGER"){
+                if (user && user.access_token === context.token, user.account_type === "MANAGER"){
                     const assignedTo = [];
                     args.taskInput.assigned_to ? args.taskInput.assigned_to.forEach(async(item)=>{
                         assignedTo.push(new ObjectId(item))
@@ -171,14 +172,14 @@ export const TaskResolver = {
 
             throw new UserInputError("Access token invalid")
         },
-        removeTaskByManagerId: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+        removeTaskByManagerId: async(_, args, context)=>{
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
             if (decode){
                 const accounts = db.collection('accounts');
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
     
-                if (user && user.access_token === args.accessToken, user.account_type === "MANAGER"){
+                if (user && user.access_token === context.token, user.account_type === "MANAGER"){
                     const tasks = db.collection('tasks');
                     const taskData = await tasks.findOne({_id: new ObjectId(args.taskId)});
                     if (taskData.created_by.toString() === decode.sub){
@@ -193,14 +194,14 @@ export const TaskResolver = {
             }
             throw new UserInputError("Access token invalid")
         },
-        createComment: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+        createComment: async(_, args, context)=>{
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
             if (decode){
                 const accounts = db.collection('accounts');
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
     
-                if (user && user.access_token === args.accessToken){
+                if (user && user.access_token === context.token){
                     const task = db.collection('tasks');
                     const taskData = await task.findOne({_id: new ObjectId(args.commentInput.task_id)});
     
@@ -227,14 +228,14 @@ export const TaskResolver = {
 
             throw new UserInputError("Access token invalid")
         },
-        removeCommentById: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+        removeCommentById: async(_, args, context)=>{
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
             if (decode){
                 const accounts = db.collection('accounts');
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
     
-                if (user && user.access_token === args.accessToken){
+                if (user && user.access_token === context.token){
                     const comment = db.collection('comments');
                     const commentData = await comment.findOne({_id: new ObjectId(args.commentId)});
     
@@ -252,14 +253,14 @@ export const TaskResolver = {
 
             throw new UserInputError("Access token invalid")
         },
-        changeTaskStatusByWorker: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+        changeTaskStatusByWorker: async(_, args, context)=>{
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
             if (decode){
                 const accounts = db.collection('accounts');
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
 
-                if (user && user.access_token === args.accessToken){
+                if (user && user.access_token === context.token){
                     const tasks = db.collection('tasks');
                     const taskData = await tasks.findOne({_id: new ObjectId(args.taskId)});
                     const taskFoundForWorker = taskData.assigned_to.find(assigned_to => assigned_to.toString() === decode.sub)

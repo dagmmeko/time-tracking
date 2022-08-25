@@ -8,12 +8,12 @@ import jwt from "jsonwebtoken"
 
 export const ReportResolver = {
     Query: {
-        getExpenseReports: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+        getExpenseReports: async(_, args, context)=>{
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
             if (decode){
                 const accounts = db.collection('accounts');
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
-                if (user && user.access_token === args.accessToken){
+                if (user && user.access_token === context.token){
                     const reports = db.collection('reports');
                     const reportData = await reports.find({created_by: new ObjectId(decode.sub)}).toArray();
                     return reportData
@@ -22,13 +22,13 @@ export const ReportResolver = {
             }
             throw new UserInputError("Access token invalid.")
         },
-        getIncidentReports: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+        getIncidentReports: async(_, args, context)=>{
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
             if (decode) {
                 const accounts = db.collection('accounts');
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
-                if (user && user.access_token === args.accessToken){
+                if (user && user.access_token === context.token){
                     const reports = db.collection('reports');
                     const reportData = await reports.find({created_by: new ObjectId(decode.sub)}).toArray();
                     return reportData
@@ -39,14 +39,14 @@ export const ReportResolver = {
         }
     },
     Mutation: {
-        createExpenseReport: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+        createExpenseReport: async(_, args, context)=>{
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
             
             if (decode){
                 const accounts = db.collection('accounts');
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
     
-                if (user && user.access_token === args.accessToken){
+                if (user && user.access_token === context.token){
                     const reports = db.collection('expense_reports');
                     const reportData = await reports.insertOne({
                         created_at: new Date(),
@@ -68,14 +68,14 @@ export const ReportResolver = {
             }
             throw new UserInputError("Access token invalid.")
         },
-        updateExpenseReport: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+        updateExpenseReport: async(_, args, context)=>{
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
             
             if (decode){
                 const accounts = db.collection('accounts');
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
     
-                if (user && user.access_token === args.accessToken){
+                if (user && user.access_token === context.token){
                     const reports = db.collection('expense_reports');
                     const reportData = await reports.findOne({_id: new ObjectId(args.reportInput.report_id)});
     
@@ -97,14 +97,14 @@ export const ReportResolver = {
             }
             throw new UserInputError("Access token invalid.")
         }, 
-        removeExpenseReport: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+        removeExpenseReport: async(_, args, context)=>{
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
             
             if (decode){
                 const accounts = db.collection('accounts');
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
     
-                if (user && user.access_token === args.accessToken){
+                if (user && user.access_token === context.token){
                     const reports = db.collection('expense_reports');
                     const reportData = await reports.findOne({_id: new ObjectId(args.reportId)});
     
@@ -119,14 +119,14 @@ export const ReportResolver = {
             }
             throw new UserInputError("Access token invalid.")
         },
-        createIncidentReport: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+        createIncidentReport: async(_, args, context)=>{
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
             
             if (decode){
                 const accounts = db.collection('accounts');
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
     
-                if (user && user.access_token === args.accessToken){
+                if (user && user.access_token === context.token){
                     const reports = db.collection('incident_reports');
                     const reportData = await reports.insertOne({
                         created_at: new Date(),
@@ -148,14 +148,14 @@ export const ReportResolver = {
     
             }
         },
-        updateIncidentReport: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+        updateIncidentReport: async(_, args, context)=>{
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
             
             if (decode){
                 const accounts = db.collection('accounts');
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
     
-                if (user && user.access_token === args.accessToken){
+                if (user && user.access_token === context.token){
                     const reports = db.collection('incident_reports');
                     const reportData = await reports.findOne({_id: new ObjectId(args.reportInput.report_id)});
                     
@@ -178,14 +178,14 @@ export const ReportResolver = {
             }
 
         },
-        removeIncidentReport: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+        removeIncidentReport: async(_, args, context)=>{
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
             
             if (decode){
                 const accounts = db.collection('accounts');
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
 
-                if (user && user.access_token === args.accessToken){
+                if (user && user.access_token === context.token){
                     const reports = db.collection('incident_reports');
                     const reportData = await reports.findOne({_id: new ObjectId(args.reportId)});
 

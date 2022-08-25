@@ -7,8 +7,8 @@ import { UserInputError } from "apollo-server";
 export const InvoiceResolver = {
     Upload: GraphQLUpload,
     Query: {
-        getInvoice: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+        getInvoice: async(_, args, context)=>{
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
             if (decode){
                 const accounts = db.collection('accounts');
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })

@@ -2,16 +2,16 @@ import { gql } from "apollo-server";
 
 export const ReportType = gql`
     extend type Query {
-        getExpenseReports(accessToken: String!): [ExpenseReport]
-        getIncidentReports(accessToken: String!): [IncidentReport]
+        getExpenseReports: [ExpenseReport]
+        getIncidentReports: [IncidentReport]
     }
     extend type Mutation {
-        createExpenseReport(reportInput: CreateExpenseReportInput!, accessToken: String!): String!
-        updateExpenseReport(reportInput: UpdateExpenseReportInput!, accessToken: String!): String!
-        removeExpenseReport(reportId: String!, accessToken: String!): String!
-        createIncidentReport(reportInput: CreateIncidentReportInput!, accessToken: String!): String!
-        updateIncidentReport(reportInput: UpdateIncidentReportInput!, accessToken: String!):String!
-        removeIncidentReport(reportId: String!, accessToken: String!): String!
+        createExpenseReport(reportInput: CreateExpenseReportInput!): String!
+        updateExpenseReport(reportInput: UpdateExpenseReportInput!): String!
+        removeExpenseReport(reportId: String!): String!
+        createIncidentReport(reportInput: CreateIncidentReportInput!): String!
+        updateIncidentReport(reportInput: UpdateIncidentReportInput!):String!
+        removeIncidentReport(reportId: String!): String!
     }
 
     type ExpenseReport {

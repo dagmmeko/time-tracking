@@ -2,7 +2,7 @@ import dotenv from "dotenv"
 dotenv.config()
 
 import { MongoClient } from 'mongodb'
-import {ApolloServerPluginLandingPageGraphQLPlayground} from "apollo-server-core"
+import {ApolloServerPluginLandingPageGraphQLPlayground, AuthenticationError} from "apollo-server-core"
 import { ApolloServer } from 'apollo-server';
 import {GlobalType} from "./graphql/type-defs/_global-type.js"
 import {GlobalResolver} from "./graphql/resolvers/_global-resolver.js"
@@ -23,7 +23,17 @@ const server = new ApolloServer({
     typeDefs: [GlobalType ,AuthType, InvoiceType, TaskType,  ReportType ], 
     resolvers: [GlobalResolver ,AuthResolver,InvoiceResolver, TaskResolver, ReportResolver],
     csrfPrevention: true,
-    plugins: [ApolloServerPluginLandingPageGraphQLPlayground()]
+    plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
+    context: ({req})=>{
+        if (req.headers.authorization){
+            const token = (req.headers.authorization || '')?.replace(/^Bearer /, '') ;
+            if (token){
+                return {token}
+            }
+            throw new AuthenticationError("Authorization token not found")
+        }
+        
+    }
 })
 const db = client.db(process.env.DB_NAME)
 

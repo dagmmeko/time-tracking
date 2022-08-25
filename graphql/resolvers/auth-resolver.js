@@ -18,8 +18,8 @@ export const AuthResolver = {
     Upload: GraphQLUpload,
     JSON: GraphQLJSON,
     Query: {
-       getAccount: async(_, args) => {
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+       getAccount: async(_, args, context) => {
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
             if (decode){
                 const collection = db.collection('accounts');
@@ -104,8 +104,8 @@ export const AuthResolver = {
         }
         throw new AuthenticationError("Invalid email or password")
     },
-    logout: async(_, args)=>{
-        var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+    logout: async(_, args, context)=>{
+        var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
         if (decode){
             const collection = db.collection('accounts');
@@ -254,8 +254,8 @@ export const AuthResolver = {
 
         return token
     },
-    choosePaymentPlan: async(_, args) =>{
-        var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+    choosePaymentPlan: async(_, args, context) =>{
+        var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
         if (decode){
             const accounts = db.collection('accounts')
@@ -269,8 +269,8 @@ export const AuthResolver = {
         }
         throw new UserInputError("Access token invalid.")
     },
-    createStripeCheckout: async(_, args)=>{
-        var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
+    createStripeCheckout: async(_, args, context)=>{
+        var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
         if (decode) {
             const stripe = new Stripe(process.env.STRIPE_SK)

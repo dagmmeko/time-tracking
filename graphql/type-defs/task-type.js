@@ -2,18 +2,18 @@ import {gql} from "apollo-server"
 
 export const TaskType = gql`
     extend type Query {
-        getTaskList(accessToken: String!, status: TaskStatus): [Task]
-        getTaskDetailById(taskId: String!, accessToken: String!): Task
-        getCommentByTaskId(taskId: String!, accessToken: String!): [Comment]
+        getTaskList(status: TaskStatus): [Task]
+        getTaskDetailById(taskId: String!): Task
+        getCommentByTaskId(taskId: String!): [Comment]
     }
 
     extend type Mutation {
-        createTaskByManagerId(taskInput: createTaskInput!, accessToken: String!): String!
-        allocateTaskByManagerId(accessToken: String!,taskInput: updateTaskInput! ): String!
-        removeTaskByManagerId(taskId: String!, accessToken: String!): String
-        createComment(commentInput: createCommentInput!, accessToken: String!): String
-        removeCommentById(accessToken: String!, commentId: String!): String
-        changeTaskStatusByWorker(taskId: String!, accessToken: String!, status: TaskStatus!): String
+        createTaskByManagerId(taskInput: createTaskInput!): String!
+        allocateTaskByManagerId(taskInput: updateTaskInput! ): String!
+        removeTaskByManagerId(taskId: String!): String
+        createComment(commentInput: createCommentInput!): String
+        removeCommentById(commentId: String!): String
+        changeTaskStatusByWorker(taskId: String! status: TaskStatus!): String
 
     }
 

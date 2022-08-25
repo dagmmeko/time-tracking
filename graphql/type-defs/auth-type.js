@@ -6,7 +6,7 @@ export const AuthType = gql`
     scalar JSON
 
     extend type Query {
-        getAccount(accessToken: String!): AccountOutput     
+        getAccount: AccountOutput     
     }
 
     extend type Mutation {
@@ -18,10 +18,10 @@ export const AuthType = gql`
         login(email: String!, password: String!): String!
         requestLoginChallenge(email: String!): JSON
         loginBiometric(loginBiometricInput: JSON!): String!
-        logout(accessToken: String!): Boolean!
+        logout: Boolean!
         # updateAccount(accessToken: String): Boolean!
-        choosePaymentPlan(accessToken: String!, paymentPlan: PlanType!): Boolean
-        createStripeCheckout(accessToken: String!, successUrl: String!, cancelUrl: String!): String! 
+        choosePaymentPlan( paymentPlan: PlanType!): Boolean
+        createStripeCheckout(successUrl: String!, cancelUrl: String!): String! 
     }
     
     input AccountInput {

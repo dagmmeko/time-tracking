@@ -4,7 +4,7 @@ export const InvoiceType = gql`
     scalar Upload
 
     extend type Query { 
-        getInvoice(accessToken: String!): [Invoice]
+        getInvoice: [Invoice]
     }
     type Invoice {
         account_id: String!
