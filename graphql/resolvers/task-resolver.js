@@ -6,44 +6,41 @@ import jwt from "jsonwebtoken"
 
 export const TaskResolver = {
     Query: {
-        getTaskListByManager: async(_, args)=>{
+        getTaskList: async(_, args)=>{
             var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
 
             if (decode){
                 const accounts = db.collection('accounts');
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
                 
-                if (user && user.access_token === args.accessToken, user.account_type === "MANAGER"){
+                if (user){
                     const tasks = db.collection('tasks');
-                    const taskData = await tasks.find({created_by: new ObjectId(decode.sub), status: args.status}).toArray();
-    
-                    return taskData
+                    if (args.status){
+                        const taskData = await tasks.find({
+                            $or: [
+                                {created_by: new ObjectId(decode.sub), status: args.status},
+                                {assigned_to: {$in: [new ObjectId(decode.sub)]}, status: args.status}
+                            ]
+                        }).toArray();
+        
+                        return taskData
+                    } 
+                    else {
+                        const taskData = await tasks.find({
+                            $or: [
+                                {created_by: new ObjectId(decode.sub)},
+                                {assigned_to: {$in: [new ObjectId(decode.sub)]}}
+                            ]
+                        }).toArray();
+        
+                        return taskData
+                    }
                 }
                 throw new AuthenticationError("You are not authorized to get tasks")
     
             }
             throw new UserInputError("Access token invalid")
 
-        },
-        getTaskListByWorkerId: async(_, args)=>{
-            var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)
-
-            if (decode){
-                const accounts = db.collection('accounts');
-                const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
-
-                if (user && user.access_token === args.accessToken, user.account_type === "WORKER"){
-                    const tasks = db.collection('tasks');
-                    const taskData = await tasks.find({assigned_to: {$in: [new ObjectId(decode.sub)]}, status: args.status}).toArray();
-                    if (taskData.length > 0){
-                        return taskData
-                    }
-                    throw new UserInputError("You have no tasks")
-                }
-                throw new AuthenticationError("You are not authorized to get tasks") 
-            }
-
-            throw new UserInputError("Access token invalid")
         },
         getTaskDetailById: async(_, args)=>{
             var decode = jwt.verify(args.accessToken, process.env.JWT_SECRET)

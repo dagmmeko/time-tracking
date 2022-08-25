@@ -2,8 +2,7 @@ import {gql} from "apollo-server"
 
 export const TaskType = gql`
     extend type Query {
-        getTaskListByManager(accessToken: String!, status: TaskStatus!): [Task]
-        getTaskListByWorkerId(accessToken: String!, status: TaskStatus!): [Task]
+        getTaskList(accessToken: String!, status: TaskStatus): [Task]
         getTaskDetailById(taskId: String!, accessToken: String!): Task
         getCommentByTaskId(taskId: String!, accessToken: String!): [Comment]
     }
