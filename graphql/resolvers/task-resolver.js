@@ -7,7 +7,6 @@ import jwt from "jsonwebtoken"
 export const TaskResolver = {
     Query: {
         getTaskList: async(_, args, context)=>{
-            console.log(context.token)
             var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
             if (decode){
@@ -22,7 +21,7 @@ export const TaskResolver = {
                                 {created_by: new ObjectId(decode.sub), status: args.status},
                                 {assigned_to: {$in: [new ObjectId(decode.sub)]}, status: args.status}
                             ]
-                        }).toArray();
+                        }).skip(args.pageNumber > 0 ? ((args.pageNumber -1) * args.itemPerPage) : 0).limit(args.itemPerPage).toArray();
         
                         return taskData
                     } 

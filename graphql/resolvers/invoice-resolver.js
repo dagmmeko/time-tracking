@@ -16,7 +16,7 @@ export const InvoiceResolver = {
                 if (user){
                     
                     const invoice = db.collection('invoices');
-                    const invoiceData = await invoice.find({account_id: new ObjectId(decode.sub)}).toArray();
+                    const invoiceData = await invoice.find({account_id: new ObjectId(decode.sub)}).skip(args.pageNumber > 0 ? ((args.pageNumber -1) * args.itemPerPage) : 0).limit(args.itemPerPage).toArray();
                     return invoiceData;
                 }
                 throw new UserInputError("User not found")

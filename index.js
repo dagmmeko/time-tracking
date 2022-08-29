@@ -23,7 +23,7 @@ const server = new ApolloServer({
     typeDefs: [GlobalType ,AuthType, InvoiceType, TaskType,  ReportType ], 
     resolvers: [GlobalResolver ,AuthResolver,InvoiceResolver, TaskResolver, ReportResolver],
     csrfPrevention: true,
-    plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
+    // plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
     context: ({req})=>{
         if (req.headers.authorization){
             const token = (req.headers.authorization || '')?.replace(/^Bearer /, '') ;

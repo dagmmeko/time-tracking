@@ -15,7 +15,9 @@ export const ReportResolver = {
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
                 if (user && user.access_token === context.token){
                     const reports = db.collection('reports');
-                    const reportData = await reports.find({created_by: new ObjectId(decode.sub)}).toArray();
+                    const reportData = await reports.find(
+                        {created_by: new ObjectId(decode.sub)}
+                        ).skip(args.pageNumber > 0 ? ((args.pageNumber -1) * args.itemPerPage) : 0).limit(args.itemPerPage).toArray();
                     return reportData
                 }
                 throw new AuthenticationError("You are not authorized to get reports")
@@ -30,7 +32,9 @@ export const ReportResolver = {
                 const user = await accounts.findOne({_id: new ObjectId(decode.sub) })
                 if (user && user.access_token === context.token){
                     const reports = db.collection('reports');
-                    const reportData = await reports.find({created_by: new ObjectId(decode.sub)}).toArray();
+                    const reportData = await reports.find(
+                        {created_by: new ObjectId(decode.sub)}
+                        ).skip(args.pageNumber > 0 ? ((args.pageNumber -1) * args.itemPerPage) : 0).limit(args.itemPerPage).toArray();
                     return reportData
                 }
                 throw new AuthenticationError("You are not authorized to get reports")
