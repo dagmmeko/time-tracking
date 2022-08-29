@@ -20,7 +20,7 @@ export const AuthType = gql`
         requestLoginChallenge(email: String!): JSON
         loginBiometric(loginBiometricInput: JSON!): String!
         logout: Boolean!
-        choosePaymentPlan( paymentPlan: PlanType!): Boolean
+        choosePaymentPlan( paymentPlanId: String!): Boolean
         createStripeCheckout(successUrl: String!, cancelUrl: String!): String! 
         createPaymentPlan(paymentPlanInput: PaymentPlanInput!): String!
     }
@@ -34,7 +34,7 @@ export const AuthType = gql`
 
         email: String!
         account_type: AccountType
-        payment_plan: PlanType
+        payment_plan_id: String
         payment_status: Boolean!
     }
     type Account {
@@ -47,7 +47,7 @@ export const AuthType = gql`
         email: String!
         account_type: AccountType
         password: String!
-        payment_plan: PlanType
+        payment_plan_id: String
         payment_status: Boolean!
         reset_token: String
         reset_token_time: String
@@ -81,12 +81,6 @@ export const AuthType = gql`
         plan_name: String!
         plan_description: String!
         plan_price_id: String!
-    }
-
-    enum PlanType {
-        STARTER
-        ENTERPRISE
-        BUSINESS
     }
      
     enum AccountType {

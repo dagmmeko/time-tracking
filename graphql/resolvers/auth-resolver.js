@@ -67,7 +67,7 @@ export const AuthResolver = {
                 email: args.accountInput.email,
                 account_type: args.accountInput.account_type,
                 password: bcrypt.hashSync(args.accountInput.password, 10),
-                payment_plan: null,
+                payment_plan_id: null,
                 payment_status: false,
                 reset_token: null,
                 reset_token_time: null,
@@ -213,7 +213,7 @@ export const AuthResolver = {
             email: user.email,
             account_type: null,
             password: null,
-            payment_plan: null,
+            payment_plan_id: null,
             payment_status: false,
             reset_token: null,
             reset_token_time: null,
@@ -270,7 +270,7 @@ export const AuthResolver = {
             const user = await accounts.findOne({_id: new ObjectId(decode.sub)})
 
             if (user && user.account_type === "COMPANY_REPRESENTATIVE"){
-                await accounts.updateOne({_id: user._id}, {$set: {payment_plan: args.payment_plan}})
+                await accounts.updateOne({_id: user._id}, {$set: {payment_plan_id: args.paymentPlanId}})
                 return true
             }
             throw new UserInputError("Error choosing payment plan")
@@ -289,10 +289,10 @@ export const AuthResolver = {
 
             
             if (user && user.account_type === "COMPANY_REPRESENTATIVE"){
-                const payment_price = await paymentPlan.findOne({type: user.payment_plan})
+                const payment_price = await paymentPlan.findOne({_id: new ObjectId(user.payment_plan_id) })
                 const session = await stripe.checkout.sessions.create({
                     line_items: [{
-                        price: payment_price.price_id,
+                        price: payment_price.plan_price_id,
                         quantity: 1
                     }],
                     mode: "subscription",

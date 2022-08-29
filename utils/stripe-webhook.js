@@ -68,7 +68,7 @@ const server = http.createServer(async (req, res) => {
                 const invoicePaidData = {
                     account_id: userInvoice._id,
                     invoice_date: new Date(),
-                    payment_plan: userInvoice.payment_plan,
+                    payment_plan_id: userInvoice.payment_plan_id,
                     amount: sessionInvoicePaid.amount_paid,
                     payment_method: "STRIPE",
                     payment_status: true,
@@ -95,7 +95,7 @@ const server = http.createServer(async (req, res) => {
                 const invoiceFailedData = {
                     account_id: userInvoiceFailed._id,
                     invoice_date: new Date(),
-                    payment_plan: userInvoiceFailed.payment_plan,
+                    payment_plan_id: userInvoiceFailed.payment_plan_id,
                     amount: null,
                     payment_method: "STRIPE",
                     payment_status: false,
