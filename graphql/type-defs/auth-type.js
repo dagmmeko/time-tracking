@@ -7,6 +7,7 @@ export const AuthType = gql`
 
     extend type Query {
         getAccount: AccountOutput     
+        getPaymentPlans: PaymentPlan 
     }
 
     extend type Mutation {
@@ -19,16 +20,9 @@ export const AuthType = gql`
         requestLoginChallenge(email: String!): JSON
         loginBiometric(loginBiometricInput: JSON!): String!
         logout: Boolean!
-        # updateAccount(accessToken: String): Boolean!
         choosePaymentPlan( paymentPlan: PlanType!): Boolean
         createStripeCheckout(successUrl: String!, cancelUrl: String!): String! 
-    }
-    
-    input AccountInput {
-        name: String!
-        email: String!
-        password: String!
-        account_type: AccountType     
+        createPaymentPlan(paymentPlanInput: PaymentPlanInput!): String!
     }
     
     type AccountOutput {
@@ -61,9 +55,32 @@ export const AuthType = gql`
         stripe_subscription_id: String
     }
 
+    type PaymentPlan {
+        created_at: String
+        updated_at: String
+        deleted_at: String
+
+        plan_name: String
+        plan_description: String
+        plan_price_id: String
+    }
+
+    input AccountInput {
+        name: String!
+        email: String!
+        password: String!
+        account_type: AccountType     
+    }
+
     input  ResetInput {
         resetToken: String!
         password: String!
+    }
+
+    input PaymentPlanInput {
+        plan_name: String!
+        plan_description: String!
+        plan_price_id: String!
     }
 
     enum PlanType {

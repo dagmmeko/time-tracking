@@ -18,7 +18,7 @@ export const AuthResolver = {
     Upload: GraphQLUpload,
     JSON: GraphQLJSON,
     Query: {
-       getAccount: async(_, args, context) => {
+        getAccount: async(_, args, context) => {
             var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
             if (decode){
@@ -33,7 +33,15 @@ export const AuthResolver = {
             }
             throw new UserInputError("Access Token incorrect!")
       
-       }
+        },
+        getPaymentPlans: async (_, args, context)=>{
+            const plans = db.collection('payment_plans')
+            const data = await plans.find().toArray()
+            if (data){
+                return data
+            }
+            throw new UserInputError("Payment Plans not found!")
+        }
    },
    Mutation: {
     createAccount: async(_, args) => {       
@@ -165,7 +173,7 @@ export const AuthResolver = {
             user: {id: uuidv4(), name: args.email}
         })
 
-        const collection = db.collection('request_registers')
+        const collection = db.collection('requestRegisters')
         const user = await collection.findOne({email: args.email})        
         if (user){
             throw new UserInputError('Invalid argument value');        
@@ -181,9 +189,9 @@ export const AuthResolver = {
     registerBiometric: async(_,args)=>{
         const {key, challenge} = parseRegisterRequest(args)
 
-        const request_register = db.collection('request_registers')
-        const accounts = db.collection('accounts')
-        const user = request_register.findOne({
+        const requestRegister = db.collection('request_registers')
+        const accounts = db.collection('accounts') 
+        const user = requestRegister.findOne({
             challenge: challenge 
         })
 
@@ -191,7 +199,7 @@ export const AuthResolver = {
             throw new AuthenticationError('Invalid challenge')
         }
 
-        await request_register.updateOne({_id: user._id}, {$set: {key: key}})
+        await requestRegister.updateOne({_id: user._id}, {$set: {key: key}})
 
         const token = jwt.sign({sub:  user.id},  process.env.JWT_SECRET)
 
@@ -217,16 +225,16 @@ export const AuthResolver = {
         return token
     },
     requestLoginChallenge: async (_, args) => {
-        const request_register = db.collection('request_registers')
+        const requestRegister = db.collection('requestRegisters')
 
-        const challengeData = request_register.findOne({email: args.email})
+        const challengeData = requestRegister.findOne({email: args.email})
         if(!challengeData){
             throw new AuthenticationError('Invalid email')
         }
 
-        const loginChallenge = generateLoginChallenge(request_register.key)
+        const loginChallenge = generateLoginChallenge(requestRegister.key)
 
-        await request_register.updateOne({id: challengeData._id}, {$set: {challenge: loginChallenge.challenge }})
+        await requestRegister.updateOne({id: challengeData._id}, {$set: {challenge: loginChallenge.challenge }})
 
         return loginChallenge
     },
@@ -236,8 +244,8 @@ export const AuthResolver = {
         if (!challenge) {
             throw new AuthenticationError('Can not create challenge')
         }
-        const request_register = db.collection('request_register')
-        const challengeData = request_register.findOne({challenge: challenge})
+        const requestRegister = db.collection('requestRegister')
+        const challengeData = requestRegister.findOne({challenge: challenge})
 
         if (!challengeData, !challengeData.key, challengeData.key.credID !== keyId){
             throw new AuthenticationError('Invalid challenge')
@@ -275,13 +283,13 @@ export const AuthResolver = {
         if (decode) {
             const stripe = new Stripe(process.env.STRIPE_SK)
             const accounts= db.collection('accounts')
-            const payment_plan = db.collection('payment_plans')
+            const paymentPlan = db.collection('payment_plans')
             
             const user = await accounts.findOne({_id: new ObjectId(decode.sub)})
 
             
             if (user && user.account_type === "COMPANY_REPRESENTATIVE"){
-                const payment_price = await payment_plan.findOne({type: user.payment_plan})
+                const payment_price = await paymentPlan.findOne({type: user.payment_plan})
                 const session = await stripe.checkout.sessions.create({
                     line_items: [{
                         price: payment_price.price_id,
@@ -301,6 +309,30 @@ export const AuthResolver = {
         }
         throw new UserInputError("Access token invalid.")
         
+    },
+    createPaymentPlan: async(_, args, context)=>{
+        var decode = jwt.verify(context.token, process.env.JWT_SECRET)
+
+        if (decode) {
+            const account = db.collection('accounts')
+            const paymentPlan = db.collection('payment_plans')    
+            const user = await account.findOne({_id: new ObjectId(decode.sub)})
+
+            if (user){
+                const planData = {
+                    created_at: new Date(),
+                    updated_at: null,
+                    deleted_at: null,
+
+                    plan_name: args.paymentPlanInput.plan_name,
+                    plan_description: args.paymentPlanInput.plan_description,
+                    plan_price_id: args.paymentPlanInput.plan_price_id
+                } 
+                const plan = await paymentPlan.insertOne(planData)
+
+                return plan.insertedId
+            }
+        }
     }
    }
 }
