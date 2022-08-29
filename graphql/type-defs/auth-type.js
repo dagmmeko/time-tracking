@@ -7,7 +7,7 @@ export const AuthType = gql`
 
     extend type Query {
         getAccount: AccountOutput     
-        getPaymentPlans: PaymentPlan 
+        getPaymentPlans: [PaymentPlan] 
     }
 
     extend type Mutation {
