@@ -2,6 +2,7 @@ import nodemailer from "nodemailer"
 
 async function sendMail(email, resetToken) {
 
+
     let transport = nodemailer.createTransport({
         service: "gmail",
         host: process.env.SMTP_HOST,
@@ -12,6 +13,8 @@ async function sendMail(email, resetToken) {
         }
     })
 
+    console.log({email: transport})
+
     const info = await new Promise((resolve, reject) => {
         transport.sendMail({
             from: process.env.SMTP_EMAIL,
@@ -21,10 +24,10 @@ async function sendMail(email, resetToken) {
         }, (err, info) => {
             if (err) {
                 reject(err)
-                // console.log({err:err})
+                console.log({err:err})
             } else {
                 resolve(info)
-                // console.log({info: info})
+                console.log({info: info})
             }
         })
     })

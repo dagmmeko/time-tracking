@@ -90,7 +90,7 @@ export const TaskResolver = {
         }
     },
     Mutation: {
-        createTaskByManagerId: async(_, args, context)=>{
+        createTask: async(_, args, context)=>{
             var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
             if (decode){
@@ -133,7 +133,7 @@ export const TaskResolver = {
 
             throw new UserInputError("Access token invalid")
         }, 
-        allocateTaskByManagerId: async(_, args, context)=>{
+        allocateTask: async(_, args, context)=>{
             var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
             if (decode){
@@ -171,7 +171,7 @@ export const TaskResolver = {
 
             throw new UserInputError("Access token invalid")
         },
-        removeTaskByManagerId: async(_, args, context)=>{
+        removeTask: async(_, args, context)=>{
             var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
             if (decode){
@@ -252,7 +252,7 @@ export const TaskResolver = {
 
             throw new UserInputError("Access token invalid")
         },
-        changeTaskStatusByWorker: async(_, args, context)=>{
+        changeTaskStatus: async(_, args, context)=>{
             var decode = jwt.verify(context.token, process.env.JWT_SECRET)
 
             if (decode){

@@ -8,6 +8,7 @@ export const AuthType = gql`
     extend type Query {
         getAccount: AccountOutput     
         getPaymentPlans: [PaymentPlan] 
+        getPaymentPlanById(planId: String!): PaymentPlan
     }
 
     extend type Mutation {
@@ -63,6 +64,8 @@ export const AuthType = gql`
         plan_name: String
         plan_description: String
         plan_price_id: String
+        plan_price_amount: Float
+        plan_price_currency: String
     }
 
     input AccountInput {
@@ -81,6 +84,8 @@ export const AuthType = gql`
         plan_name: String!
         plan_description: String!
         plan_price_id: String!
+        plan_price_amount: Float
+        plan_price_currency: String
     }
      
     enum AccountType {

@@ -8,12 +8,12 @@ export const TaskType = gql`
     }
 
     extend type Mutation {
-        createTaskByManagerId(taskInput: createTaskInput!): String!
-        allocateTaskByManagerId(taskInput: updateTaskInput! ): String!
-        removeTaskByManagerId(taskId: String!): String
+        createTask(taskInput: createTaskInput!): String!
+        allocateTask(taskInput: updateTaskInput! ): String!
+        removeTask(taskId: String!): String
         createComment(commentInput: createCommentInput!): String
         removeCommentById(commentId: String!): String
-        changeTaskStatusByWorker(taskId: String! status: TaskStatus!): String
+        changeTaskStatus(taskId: String! status: TaskStatus!): String
 
     }
 

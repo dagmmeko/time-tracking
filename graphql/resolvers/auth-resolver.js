@@ -41,6 +41,14 @@ export const AuthResolver = {
                 return data
             }
             throw new UserInputError("Payment Plans not found!")
+        },
+        getPaymentPlanById: async(_, args, context)=>{
+            const plans = db.collection('payment_plans')
+            const data = await plans.findOne({_id: new ObjectId(args.planId)})
+            if (data) {
+                return data
+            }
+            throw new UserInputError("Payment Plan not found!")
         }
    },
    Mutation: {
@@ -81,16 +89,18 @@ export const AuthResolver = {
                 const token = jwt.sign({sub:  insertedUser.insertedId}, process.env.JWT_SECRET)
                 await collection.updateOne({_id: insertedUser.insertedId}, {$set: {access_token: token}})
 
+                const bucket = new mongodb.GridFSBucket(db, { bucketName: 'accountImage' });
+
+                const {createReadStream } = await args.image
+
+                createReadStream().pipe(bucket.openUploadStream(insertedUser._id.toString(), {
+                metadata: { account_id: insertedUser._id.toString() }
+                }))
+
                 return  token
             }
             throw new UserInputError("Error assigning access token")
-            // const bucket = new mongodb.GridFSBucket(db, { bucketName: 'accountImage' });
-
-            // const {createReadStream } = await args.image
-
-            // createReadStream().pipe(bucket.openUploadStream(insertedUser._id.toString(), {
-            //  metadata: { account_id: insertedUser._id.toString() }
-            // }))
+            
         
             
         }
@@ -132,7 +142,7 @@ export const AuthResolver = {
         const collection = db.collection('accounts')
         var mailFormat = /\S+@\S+\.\S+/
 
-        if (!mailFormat.test(args.email)){
+        if (mailFormat.test(args.email)){
             const user = await collection.findOne({email: args.email})
 
             if (user){
@@ -326,7 +336,9 @@ export const AuthResolver = {
 
                     plan_name: args.paymentPlanInput.plan_name,
                     plan_description: args.paymentPlanInput.plan_description,
-                    plan_price_id: args.paymentPlanInput.plan_price_id
+                    plan_price_id: args.paymentPlanInput.plan_price_id,
+                    plan_price_amount: args.paymentPlanInput.plan_price_amount,
+                    plan_price_currency: args.paymentPlanInput.plan_price_currency
                 } 
                 const plan = await paymentPlan.insertOne(planData)
 

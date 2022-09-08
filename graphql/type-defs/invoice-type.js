@@ -7,6 +7,7 @@ export const InvoiceType = gql`
         getInvoice(pageNumber: Int!, itemPerPage: Int!): [Invoice]
     }
     type Invoice {
+        id: String
         account_id: String!
         invoice_date: String!
         payment_plan_id: String!
