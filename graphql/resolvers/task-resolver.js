@@ -112,7 +112,7 @@ export const TaskResolver = {
                         deleted_at: null,
     
                         task_name: args.taskInput.task_name,
-                        category: "Category",
+                        category: args.taskInput.category,
                         assigned_to: assignedTo,
     
                         task_description: args.taskInput.task_description,

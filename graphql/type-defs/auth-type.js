@@ -6,7 +6,8 @@ export const AuthType = gql`
     scalar JSON
 
     extend type Query {
-        getAccount: AccountOutput     
+        getAccount: AccountOutput
+        getAccountWithId(accountId: String): AccountOutput
         getPaymentPlans: [PaymentPlan] 
         getPaymentPlanById(planId: String!): PaymentPlan
     }

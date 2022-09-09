@@ -34,6 +34,20 @@ export const AuthResolver = {
             throw new UserInputError("Access Token incorrect!")
       
         },
+        getAccountWithId: async (_, args, context)=>{
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
+
+            if (decode) {
+                const accounts = db.collection('accounts')
+                const user = await accounts.findOne({_id: new ObjectId(args.accountId) })
+                if (user){
+                    return user
+                }
+                else{
+                    throw new UserInputError("You can access details of this account")
+                }
+            }
+        },
         getPaymentPlans: async (_, args, context)=>{
             const plans = db.collection('payment_plans')
             const data = await plans.find().toArray()

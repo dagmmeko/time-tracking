@@ -21,6 +21,7 @@ export const TaskType = gql`
         task_name: String!
         assigned_to: [String!]
 
+        category: String
         task_description: String!
         task_due_date: String!
     }
