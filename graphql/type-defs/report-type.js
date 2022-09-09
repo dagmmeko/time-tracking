@@ -55,6 +55,7 @@ export const ReportType = gql`
         deleted_at: String
 
         task_id: String!
+        incident_name: String!
         incident_date: String!,
         mistake_description: String!,
         mistake_reason: String!,
@@ -67,6 +68,7 @@ export const ReportType = gql`
 
     input CreateIncidentReportInput{
         task_id: String!
+        incident_name: String!
         incident_date: String!,
         mistake_description: String!,
         mistake_reason: String!,
@@ -78,6 +80,7 @@ export const ReportType = gql`
     input UpdateIncidentReportInput{
         report_id: String!
         task_id: String
+        incident_name: String!
         incident_date: String,
         mistake_description: String,
         mistake_reason: String,

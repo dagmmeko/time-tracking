@@ -138,6 +138,7 @@ export const ReportResolver = {
                         deleted_at: null,
     
                         task_id: args.reportInput.task_id,
+                        incident_name: args.reportInput.incident_name,
                         incident_date: args.reportInput.incident_date,
                         mistake_description: args.reportInput.mistake_description,
                         mistake_reason: args.reportInput.mistake_reason,
@@ -167,6 +168,7 @@ export const ReportResolver = {
                         const reportUpdateResult = await reports.updateOne({_id: new ObjectId(args.reportInput.report_id)}, {$set: {
                             updated_at: new Date(),
                             task_id: args.reportInput.task_id || reportData.task_id,
+                            incident_name: args.reportInput.incident_name || reportData.incident_name,
                             incident_date: args.reportInput.incident_date || reportData.incident_date,
                             mistake_description: args.reportInput.mistake_description || reportData.mistake_description,
                             mistake_reason: args.reportInput.mistake_reason || reportData.mistake_reason,
