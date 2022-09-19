@@ -1,7 +1,6 @@
 import {gql} from "apollo-server"
 
 export const AuthType = gql`    
-
     scalar Upload
     scalar JSON
 
@@ -13,7 +12,7 @@ export const AuthType = gql`
     }
 
     extend type Mutation {
-        createAccount(accountInput: AccountInput!, image: Upload): String!
+        createAccount(accountInput: AccountInput!): String!
         requestRegister(email: String!): JSON!
         registerBiometric(registerBiometricInput: JSON!): String!
         requestResetPassword(email: String!): Boolean!

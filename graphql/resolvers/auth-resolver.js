@@ -67,8 +67,9 @@ export const AuthResolver = {
    },
    Mutation: {
     createAccount: async(_, args) => {       
+        console.log({args: args})
         const collection = db.collection('accounts');
-
+       
         var mailFormat = /\S+@\S+\.\S+/
 
         if (!mailFormat.test(args.accountInput.email)){
@@ -102,14 +103,6 @@ export const AuthResolver = {
             if (insertedUser) {
                 const token = jwt.sign({sub:  insertedUser.insertedId}, process.env.JWT_SECRET)
                 await collection.updateOne({_id: insertedUser.insertedId}, {$set: {access_token: token}})
-
-                const bucket = new mongodb.GridFSBucket(db, { bucketName: 'accountImage' });
-
-                const {createReadStream } = await args.image
-
-                createReadStream().pipe(bucket.openUploadStream(insertedUser._id.toString(), {
-                metadata: { account_id: insertedUser._id.toString() }
-                }))
 
                 return  token
             }
@@ -177,6 +170,7 @@ export const AuthResolver = {
     },
     resetPassword: async(_, args)=>{
         var decode = jwt.verify(args.resetTokenInput.resetToken, process.env.JWT_SECRET)
+        console.log(decode.sub)
         
         if (decode){
             const collection = db.collection('accounts')
@@ -192,16 +186,16 @@ export const AuthResolver = {
         throw new AuthenticationError("Invalid token")        
     },
     requestRegister: async(_, args)=>{
-        const challengeResponse = generateRegistrationChallenge({
-            relyingParty: {name: args.email},
-            user: {id: uuidv4(), name: args.email}
-        })
-
         const collection = db.collection('requestRegisters')
         const user = await collection.findOne({email: args.email})        
         if (user){
             throw new UserInputError('Invalid argument value');        
         }
+        const challengeResponse = generateRegistrationChallenge({
+            relyingParty: {name: args.email},
+            user: {id: uuidv4(), name: args.email}
+        })
+
         await collection.insertOne({
             id: challengeResponse.user.id, 
             email: args.email, 
@@ -220,7 +214,7 @@ export const AuthResolver = {
         })
 
         if(!user) {
-            throw new AuthenticationError('Invalid challenge')
+            throw new AuthenticationError('Invalid challenge / User not found')
         }
 
         await requestRegister.updateOne({_id: user._id}, {$set: {key: key}})

@@ -51,18 +51,18 @@ export const TaskType = gql`
         status: TaskStatus
 
         working_time: String
-        # files
+        file_ids: [String]
     }
 
     type Comment {
         created_at: String!
-        updated_at: String!
+        updated_at: String
         deleted_at: String
 
         commented_by: String
         comment_description: String
         task_id: String
-        # files
+        file_ids: [String]
     }
     input createCommentInput {
         comment_description: String!

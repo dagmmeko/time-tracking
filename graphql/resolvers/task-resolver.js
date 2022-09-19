@@ -75,7 +75,9 @@ export const TaskResolver = {
                 if (user && user.access_token === context.token){
                     const tasks = db.collection('tasks');
                     const taskData = await tasks.findOne({_id: new ObjectId(args.taskId)});
-                    if (taskData.assigned_to.toString() === decode.sub || taskData.created_by.toString() === decode.sub){
+                    const taskFoundForWorker = taskData.assigned_to.find(assigned_to => assigned_to.toString() === decode.sub)
+
+                    if (taskFoundForWorker || taskData.created_by.toString() === decode.sub){
                         const comments = db.collection('comments');
                         const commentData = await comments.find({task_id: new ObjectId(args.taskId)}).toArray();
                         return commentData
@@ -120,7 +122,8 @@ export const TaskResolver = {
                         created_by: user._id,
                         status: "NEW",
     
-                        working_time: "0"
+                        working_time: "0",
+                        file_ids: []
                     }
     
                     const taskCreateResult = await taskCreate.insertOne(taskCreateData);
@@ -204,7 +207,9 @@ export const TaskResolver = {
                     const task = db.collection('tasks');
                     const taskData = await task.findOne({_id: new ObjectId(args.commentInput.task_id)});
     
-                    if (taskData.assigned_to.toString() === decode.sub || taskData.created_by.toString() === decode.sub){
+                    const taskFoundForWorker = taskData.assigned_to.find(assigned_to => assigned_to.toString() === decode.sub)
+
+                    if (taskFoundForWorker || taskData.created_by.toString() === decode.sub){
                         const comment = db.collection('comments');
                         const commentData = {
                             created_at: new Date(),
@@ -213,7 +218,8 @@ export const TaskResolver = {
     
                             commented_by: user._id,
                             comment_description: args.commentInput.comment_description,
-                            task_id: taskData._id
+                            task_id: taskData._id,
+                            file_ids: []
                         }
     
                         const commentCreateResult = await comment.insertOne(commentData);

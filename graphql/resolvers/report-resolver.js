@@ -163,7 +163,7 @@ export const ReportResolver = {
                 if (user && user.access_token === context.token){
                     const reports = db.collection('incident_reports');
                     const reportData = await reports.findOne({_id: new ObjectId(args.reportInput.report_id)});
-                    
+                    console.log(reportData)
                     if (reportData.created_by.toString() === decode.sub){
                         const reportUpdateResult = await reports.updateOne({_id: new ObjectId(args.reportInput.report_id)}, {$set: {
                             updated_at: new Date(),

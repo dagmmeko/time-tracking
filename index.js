@@ -14,15 +14,21 @@ import {TaskType} from './graphql/type-defs/task-type.js';
 import {TaskResolver} from './graphql/resolvers/task-resolver.js';
 import { ReportResolver } from "./graphql/resolvers/report-resolver.js";
 import { ReportType } from "./graphql/type-defs/report-type.js";
+import { FileType } from './graphql/type-defs/file-type.js'
+import { FileResolver } from './graphql/resolvers/file-resolver.js' 
 import "./utils/stripe-webhook.js"
 
 
 const client = new MongoClient(process.env.DB_URL, { useUnifiedTopology: true } );
 
 const server = new ApolloServer({
-    typeDefs: [GlobalType ,AuthType, InvoiceType, TaskType,  ReportType ], 
-    resolvers: [GlobalResolver ,AuthResolver,InvoiceResolver, TaskResolver, ReportResolver],
+    typeDefs: [GlobalType ,AuthType, InvoiceType, TaskType,  ReportType, FileType ], 
+    resolvers: [GlobalResolver ,AuthResolver,InvoiceResolver, TaskResolver, ReportResolver, FileResolver],
     csrfPrevention: true,
+    cors: {
+        origin: '*',
+        credentials: true
+    },
     // plugins: [ApolloServerPluginLandingPageGraphQLPlayground()],
     uploads: false,
     context: ({req})=>{
