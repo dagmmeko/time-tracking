@@ -2,11 +2,12 @@ import {gql} from "apollo-server"
 
 export const FileType = gql`
     extend type Query{
-        getFile(fileType: FileType, fileId: String): String
+        getFile(fileType: FileType!, fileId: String!): String
     }
     extend type Mutation {
         createFile(fileType: FileType!): FileOutput
-        fileUploadSuccess(fileType: FileType, collectionId: String!, fileId: String): String
+        fileUploadSuccess(fileType: FileType!, collectionId: String, fileId: String): String
+        deleteFile(fileType: FileType!,fileId: String!): Boolean
     }
 
     type FileOutput {

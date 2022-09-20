@@ -3,7 +3,6 @@ import { ObjectId } from "mongodb";
 import {GraphQLUpload} from "graphql-upload"
 import jwt from "jsonwebtoken"
 import { UserInputError } from "apollo-server";
-import {uploadFile, getFile} from "../../utils/file-upload.js";
 
 export const InvoiceResolver = {
     Upload: GraphQLUpload,
@@ -23,6 +22,6 @@ export const InvoiceResolver = {
                 throw new UserInputError("User not found")
             }
             throw new UserInputError("Access token invalid.")
-        }
+        }  
     }
 }

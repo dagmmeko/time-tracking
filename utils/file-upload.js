@@ -50,3 +50,35 @@ export async function getFile(key) {
     })
     return url
 }
+
+export async function deleteFile(key) {
+    try {
+        await s3.headObject({
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: key
+        }).promise() 
+
+        try {
+            const url = await new Promise((resolve, reject)=>{
+                s3.deleteObject({
+                    Bucket: process.env.S3_BUCKET_NAME,
+                    Key: key
+                }, (err, res)=>{
+                    if (err){
+                        reject(err)
+                        console.log({FileDelErr: err })
+                    }
+                    else {
+                        resolve(res)
+                        console.log({FileDelSuc: res})
+                    }
+                })
+            })
+            return url
+        }catch(err){
+            console.log(`Deleting S3 subject failed with error: ${err}`)
+        }
+    } catch (err){
+        console.log(`S3 subject not found with error: ${err}`)
+    }
+}

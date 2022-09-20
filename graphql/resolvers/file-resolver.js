@@ -2,7 +2,7 @@ import db from "../../index.js"
 import { AuthenticationError, UserInputError } from "apollo-server";
 import { ObjectId } from "mongodb";
 import { v4 as uuidv4 } from 'uuid';
-import {uploadFile, getFile} from "../../utils/file-upload.js";
+import {uploadFile, getFile, deleteFile} from "../../utils/file-upload.js";
 import jwt from "jsonwebtoken"
 
 
@@ -23,20 +23,15 @@ export const FileResolver = {
                         }
                         throw new UserInputError("File can not be found")
                     }
-                    else if (args.fileType === "TASK"){
+                    else if (args.fileType === "TASK" || args.fileType === "COMMENT"){
                         const url = await getFile(`${args.fileType}/${args.fileId}`)
                         if (url){
                             return url
                         }
                         throw new UserInputError("File can not be found")
                     }
-                    else if (args.fileType === "COMMENT"){
-                        const url = await getFile(`${args.fileType}/${args.fileId}`)
-                        if (url){
-                            return url
-                        }
-                        throw new UserInputError("File can not be found")
-                    }
+                    else
+                        throw new UserInputError("File type check failed!")
                 }
                 throw new UserInputError("User not found")
             }
@@ -156,6 +151,28 @@ export const FileResolver = {
                         return `${args.fileType} has been updated with file id!`
                     }
                 }
+            }
+        },
+        deleteFile: async (_, args, context) => {
+            var decode = jwt.verify(context.token, process.env.JWT_SECRET)
+
+            if (decode){
+                const accounts = db.collection('accounts')
+                const user = await accounts.findOne({_id: new ObjectId(decode.sub)})
+
+                if (user){
+                    if (args.fileType === "ACCOUNT"){
+                       const url = await deleteFile(`${args.fileType}/${decode.sub}`) 
+                       console.log(url)
+                       return true
+                    }
+                    else if (args.fileType === "TASK" || args.fileType === "COMMENT"){
+                        const url = await deleteFile(`${args.fileType}/${args.fileId}`)
+                        console.log(url) 
+                        return true
+                    }
+                }
+                throw new UserInputError("User not found")
             }
         }
     }
